@@ -349,17 +349,15 @@ struct AddExpenseView: View {
                 
                 // Split among section
                 splitAmongSection
-            }
-            .onAppear {
-                groupService.loadGroups()
-            }
                 
                 Spacer()
                 
                 // Add button
                 addButton
             }
-            .background(Color.gray.opacity(0.05))
+            .onAppear {
+                groupService.loadGroups()
+            }
         }
         .background(Color.gray.opacity(0.05))
         .ignoresSafeArea(.all, edges: .all)
