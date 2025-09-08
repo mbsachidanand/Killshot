@@ -287,17 +287,10 @@ struct AddExpenseView: View {
     @State private var amount = ""
     @State private var paidBy = "Rishab (me)"
     @State private var when = Date()
-    @State private var group = "Group 1"
+    @State private var selectedGroup: Group?
     @State private var splitType = "Equally"
     
-    // Sample participants data
-    private let participants = [
-        ("Person 1", 62.5),
-        ("Person 2", 62.5),
-        ("Person 3", 62.5),
-        ("Person 4", 62.5)
-    ]
-    
+    @StateObject private var groupService = GroupService()
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -347,7 +340,7 @@ struct AddExpenseView: View {
                         datePickerField
                     }
                     
-                    dropdownField(label: "Group", value: $group, options: ["Group 1", "Group 2", "Group 3", "Group 4"])
+                    groupSelectionField
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
@@ -356,6 +349,10 @@ struct AddExpenseView: View {
                 
                 // Split among section
                 splitAmongSection
+            }
+            .onAppear {
+                groupService.loadGroups()
+            }
                 
                 Spacer()
                 
@@ -467,6 +464,66 @@ struct AddExpenseView: View {
         return formatter.string(from: date)
     }
     
+    // MARK: - Group Selection Field
+    private var groupSelectionField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Group")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+            
+            if groupService.isLoading {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Loading groups...")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+                .background(Color.white)
+                .cornerRadius(12)
+            } else if groupService.groups.isEmpty {
+                HStack {
+                    Text("No groups available")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+                .background(Color.white)
+                .cornerRadius(12)
+            } else {
+                Menu {
+                    ForEach(groupService.groups, id: \.id) { group in
+                        Button(action: {
+                            selectedGroup = group
+                        }) {
+                            Text(group.name)
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Text(selectedGroup?.name ?? "Select a group")
+                            .font(.body)
+                            .foregroundColor(selectedGroup == nil ? .secondary : .primary)
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 16)
+                    .background(Color.white)
+                    .cornerRadius(12)
+                }
+            }
+        }
+    }
+    
     // MARK: - Split Among Section
     private var splitAmongSection: some View {
         VStack(spacing: 0) {
@@ -492,41 +549,68 @@ struct AddExpenseView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
             
-            // Participants list with individual boxes
-            VStack(spacing: 8) {
-                ForEach(Array(participants.enumerated()), id: \.offset) { index, participant in
+            // Members list with individual boxes
+            if let selectedGroup = selectedGroup, !selectedGroup.members.isEmpty {
+                VStack(spacing: 8) {
+                    ForEach(Array(selectedGroup.members.enumerated()), id: \.offset) { index, member in
+                        HStack {
+                            Text(member.name)
+                                .font(.body)
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                            
+                            Text("₹\(String(format: "%.1f", calculateEqualSplit()))")
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color.white)
+                        .cornerRadius(12)
+                    }
+                }
+                .padding(.horizontal, 20)
+            } else {
+                VStack(spacing: 8) {
                     HStack {
-                        Text(participant.0)
+                        Text("Select a group to see members")
                             .font(.body)
-                            .foregroundColor(.primary)
+                            .foregroundColor(.secondary)
                         
                         Spacer()
-                        
-                        Text("₹\(String(format: "%.1f", participant.1))")
-                            .font(.body)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary)
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
                     .background(Color.white)
                     .cornerRadius(12)
                 }
+                .padding(.horizontal, 20)
             }
-            .padding(.horizontal, 20)
         }
         .padding(.top, 0)
+    }
+    
+    // MARK: - Helper Functions
+    private func calculateEqualSplit() -> Double {
+        guard let selectedGroup = selectedGroup,
+              !selectedGroup.members.isEmpty,
+              let amountValue = Double(amount) else {
+            return 0.0
+        }
+        return amountValue / Double(selectedGroup.members.count)
     }
     
     // MARK: - Add Button
     private var addButton: some View {
         Button(action: {
             // Handle add expense action
-            if !title.isEmpty && !amount.isEmpty {
-                print("Add expense: \(title) - ₹\(amount) on \(formatDate(when))")
+            if !title.isEmpty && !amount.isEmpty && selectedGroup != nil {
+                print("Add expense: \(title) - ₹\(amount) on \(formatDate(when)) for group: \(selectedGroup?.name ?? "Unknown")")
                 dismiss()
             } else {
-                print("Please fill in all required fields")
+                print("Please fill in all required fields and select a group")
             }
         }) {
             Text("Add")
@@ -545,7 +629,7 @@ struct AddExpenseView: View {
     
     // MARK: - Form Validation
     private var isFormValid: Bool {
-        return !title.isEmpty && !amount.isEmpty
+        return !title.isEmpty && !amount.isEmpty && selectedGroup != nil
     }
 }
 
