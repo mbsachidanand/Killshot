@@ -429,7 +429,7 @@ struct AddExpenseView: View {
                 
                 Image(systemName: "chevron.down")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.primary)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
@@ -506,7 +506,7 @@ struct AddExpenseView: View {
                         
                         Image(systemName: "chevron.down")
                             .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.primary)
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
@@ -543,7 +543,7 @@ struct AddExpenseView: View {
                     
                     Image(systemName: "chevron.down")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.primary)
                 }
             }
             .padding(.horizontal, 20)
