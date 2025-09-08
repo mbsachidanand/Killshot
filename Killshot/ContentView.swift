@@ -289,6 +289,7 @@ struct AddExpenseView: View {
     @State private var when = Date()
     @State private var group = "Group 1"
     @State private var splitType = "Equally"
+    @State private var showDatePicker = false
     
     // Sample participants data
     private let participants = [
@@ -450,26 +451,46 @@ struct AddExpenseView: View {
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
             
-            ZStack {
-                // Background styling
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white)
-                    .frame(height: 50)
+            HStack {
+                Text(formatDate(when))
+                    .font(.body)
+                    .foregroundColor(.primary)
                 
-                // Date picker content
-                HStack {
-                    DatePicker("", selection: $when, displayedComponents: .date)
-                        .datePickerStyle(CompactDatePickerStyle())
-                        .labelsHidden()
-                        .accentColor(.blue)
-                    
-                    Spacer()
-                    
-                    Image(systemName: "calendar")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.blue)
+                Spacer()
+                
+                Image(systemName: "calendar")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.blue)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+            .background(Color.white)
+            .cornerRadius(12)
+            .contentShape(Rectangle()) // Make entire area tappable
+            .onTapGesture {
+                // Present date picker sheet
+                showDatePicker = true
+            }
+            .sheet(isPresented: $showDatePicker) {
+                NavigationView {
+                    VStack {
+                        DatePicker("Select Date", selection: $when, displayedComponents: .date)
+                            .datePickerStyle(WheelDatePickerStyle())
+                            .padding()
+                        
+                        Spacer()
+                    }
+                    .navigationTitle("Select Date")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .navigationBarItems(
+                        leading: Button("Cancel") {
+                            showDatePicker = false
+                        },
+                        trailing: Button("Done") {
+                            showDatePicker = false
+                        }
+                    )
                 }
-                .padding(.horizontal, 16)
             }
         }
     }
