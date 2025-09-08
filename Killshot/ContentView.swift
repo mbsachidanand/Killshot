@@ -125,7 +125,7 @@ struct ContentView: View {
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.primary)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
