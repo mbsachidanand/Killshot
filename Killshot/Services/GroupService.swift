@@ -9,19 +9,21 @@ import Foundation
 import Combine
 
 // MARK: - Group Service Protocol
+@MainActor
 protocol GroupServiceProtocol {
     var groups: [Group] { get }
     var isLoading: Bool { get }
     var error: APIError? { get }
     
-    @MainActor func loadGroups()
-    @MainActor func refreshGroups()
-    @MainActor func createGroup(name: String, description: String?)
-    @MainActor func updateGroup(id: String, name: String?, description: String?)
-    @MainActor func deleteGroup(id: String)
+    func loadGroups()
+    func refreshGroups()
+    func createGroup(name: String, description: String?)
+    func updateGroup(id: String, name: String?, description: String?)
+    func deleteGroup(id: String)
 }
 
 // MARK: - Group Service Implementation
+@MainActor
 class GroupService: ObservableObject, GroupServiceProtocol {
     @Published var groups: [Group] = []
     @Published var isLoading: Bool = false
@@ -35,7 +37,6 @@ class GroupService: ObservableObject, GroupServiceProtocol {
     }
     
     // MARK: - Public Methods
-    @MainActor
     func loadGroups() {
         guard !isLoading else { return }
         
@@ -61,13 +62,11 @@ class GroupService: ObservableObject, GroupServiceProtocol {
             .store(in: &cancellables)
     }
     
-    @MainActor
     func refreshGroups() {
         groups = []
         loadGroups()
     }
     
-    @MainActor
     func createGroup(name: String, description: String? = nil) {
         guard !isLoading else { return }
         
@@ -93,7 +92,6 @@ class GroupService: ObservableObject, GroupServiceProtocol {
             .store(in: &cancellables)
     }
     
-    @MainActor
     func updateGroup(id: String, name: String? = nil, description: String? = nil) {
         guard !isLoading else { return }
         
@@ -121,7 +119,6 @@ class GroupService: ObservableObject, GroupServiceProtocol {
             .store(in: &cancellables)
     }
     
-    @MainActor
     func deleteGroup(id: String) {
         guard !isLoading else { return }
         
@@ -148,12 +145,10 @@ class GroupService: ObservableObject, GroupServiceProtocol {
     }
     
     // MARK: - Helper Methods
-    @MainActor
     func clearError() {
         error = nil
     }
     
-    @MainActor
     func getGroup(by id: String) -> Group? {
         return groups.first { $0.id == id }
     }
