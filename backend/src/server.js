@@ -14,6 +14,9 @@ const rateLimit = require('express-rate-limit');
 const groupRoutes = require('./routes/groupRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 
+// Import database
+const databaseFactory = require('./database/DatabaseFactory');
+
 // Import middleware
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
@@ -56,14 +59,28 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Killshot API is running',
-    timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0',
-    environment: process.env.NODE_ENV || 'development'
-  });
+app.get('/health', async (req, res) => {
+  try {
+    const dbHealth = await databaseFactory.getHealthStatus();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Killshot API is running',
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || '1.0.0',
+      environment: process.env.NODE_ENV || 'development',
+      database: dbHealth
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Killshot API is running but database is unhealthy',
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || '1.0.0',
+      environment: process.env.NODE_ENV || 'development',
+      database: { status: 'error', message: error.message }
+    });
+  }
 });
 
 // API routes
@@ -91,27 +108,46 @@ app.use(notFound);
 // Error handler
 app.use(errorHandler);
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Killshot API server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 API Base URL: http://localhost:${PORT}/api/${API_VERSION}`);
-  console.log(`❤️  Health Check: http://localhost:${PORT}/health`);
-});
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Initialize database connection
+    console.log('🔌 Initializing database connection...');
+    await databaseFactory.getAdapter();
+    console.log('✅ Database connection established');
+    
+    // Start server
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 Killshot API server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔗 API Base URL: http://localhost:${PORT}/api/${API_VERSION}`);
+      console.log(`❤️  Health Check: http://localhost:${PORT}/health`);
+    });
+    
+    return server;
+  } catch (error) {
+    console.error('❌ Failed to start server:', error.message);
+    process.exit(1);
+  }
+}
+
+const server = startServer();
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM received. Shutting down gracefully...');
-  server.close(() => {
+  await databaseFactory.disconnect();
+  server.then(s => s.close(() => {
     console.log('Process terminated');
-  });
+  }));
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('SIGINT received. Shutting down gracefully...');
-  server.close(() => {
+  await databaseFactory.disconnect();
+  server.then(s => s.close(() => {
     console.log('Process terminated');
-  });
+  }));
 });
 
 module.exports = app;

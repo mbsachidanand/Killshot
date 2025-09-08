@@ -3,13 +3,13 @@
  * Handles HTTP requests for expense operations
  */
 
-const ExpenseService = require('../services/ExpenseService');
-const GroupService = require('../services/GroupService');
+const ExpenseServiceDB = require('../services/ExpenseServiceDB');
+const GroupServiceDB = require('../services/GroupServiceDB');
 
 class ExpenseController {
     constructor() {
-        this.expenseService = new ExpenseService();
-        this.groupService = new GroupService();
+        this.expenseService = new ExpenseServiceDB();
+        this.groupService = new GroupServiceDB();
     }
 
     /**

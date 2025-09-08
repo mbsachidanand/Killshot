@@ -3,12 +3,12 @@
  * Handles HTTP requests for group operations
  */
 
-const GroupService = require('../services/GroupService');
+const GroupServiceDB = require('../services/GroupServiceDB');
 const { validationResult } = require('express-validator');
 
 class GroupController {
   constructor() {
-    this.groupService = new GroupService();
+    this.groupService = new GroupServiceDB();
   }
 
   /**
