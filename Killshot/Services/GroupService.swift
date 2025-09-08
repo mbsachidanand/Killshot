@@ -28,6 +28,7 @@ class GroupService: ObservableObject, GroupServiceProtocol {
     @Published var groups: [Group] = []
     @Published var isLoading: Bool = false
     @Published var error: APIError? = nil
+    @Published var refreshTrigger: UUID = UUID()
     
     private let apiService: APIServiceProtocol
     private var cancellables = Set<AnyCancellable>()
@@ -80,11 +81,19 @@ class GroupService: ObservableObject, GroupServiceProtocol {
                                 print("📊 Stored Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
                             }
                             
-                            // Force UI refresh by notifying observers
+                            // Force UI refresh by notifying observers multiple times
                             self?.objectWillChange.send()
                             
-                            // Call the UI refresh callback
-                            self?.onGroupsUpdated?()
+                            // Additional delay and refresh to ensure UI updates
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                self?.objectWillChange.send()
+                                
+                                // Update refresh trigger to force UI update
+                                self?.refreshTrigger = UUID()
+                                
+                                // Call the UI refresh callback
+                                self?.onGroupsUpdated?()
+                            }
                         }
                     }
                 }

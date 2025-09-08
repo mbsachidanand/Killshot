@@ -91,11 +91,15 @@ struct ContentView: View {
             } else {
                 ForEach(Array(groupService.groups.enumerated()), id: \.element.id) { index, group in
                     groupRow(for: group, at: index)
+                        .onAppear {
+                            print("🔄 UI: Rendering group \(group.name) with total \(group.totalExpensesDouble)")
+                        }
                 }
             }
         }
         .padding(.horizontal, 20)
         .id(refreshID)
+        .id(groupService.refreshTrigger)
     }
     
     // MARK: - Group Row
