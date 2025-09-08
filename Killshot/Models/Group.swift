@@ -12,15 +12,22 @@ struct Group: Codable, Identifiable {
     let id: String
     let name: String
     let description: String
-    let memberCount: Int
-    let totalExpenses: Double
+    let members: [GroupMember]
+    let expenses: [Expense]
     let createdAt: String
     let updatedAt: String
     
+    // Computed properties for backward compatibility
+    var memberCount: Int {
+        return members.count
+    }
+    
+    var totalExpenses: Double {
+        return expenses.reduce(0) { $0 + $1.amount }
+    }
+    
     enum CodingKeys: String, CodingKey {
-        case id, name, description
-        case memberCount = "memberCount"
-        case totalExpenses = "totalExpenses"
+        case id, name, description, members, expenses
         case createdAt = "createdAt"
         case updatedAt = "updatedAt"
     }
