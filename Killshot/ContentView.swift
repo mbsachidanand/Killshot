@@ -289,7 +289,6 @@ struct AddExpenseView: View {
     @State private var when = Date()
     @State private var group = "Group 1"
     @State private var splitType = "Equally"
-    @State private var showDatePicker = false
     
     // Sample participants data
     private let participants = [
@@ -466,35 +465,12 @@ struct AddExpenseView: View {
             .padding(.vertical, 16)
             .background(Color.white)
             .cornerRadius(12)
-            .contentShape(Rectangle()) // Make entire area tappable
-            .onTapGesture {
-                // Present date picker sheet
-                showDatePicker = true
-            }
-            .sheet(isPresented: $showDatePicker) {
-                NavigationView {
-                    VStack {
-                        DatePicker("Select Date", selection: $when, displayedComponents: .date)
-                            .datePickerStyle(CompactDatePickerStyle())
-                            .padding()
-                        
-                        Spacer()
-                    }
-                    .navigationTitle("Select Date")
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") {
-                                showDatePicker = false
-                            }
-                        }
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") {
-                                showDatePicker = false
-                            }
-                        }
-                    }
-                }
-            }
+            .overlay(
+                DatePicker("", selection: $when, displayedComponents: .date)
+                    .datePickerStyle(CompactDatePickerStyle())
+                    .labelsHidden()
+                    .opacity(0.01) // Nearly invisible but still interactive
+            )
         }
     }
     
