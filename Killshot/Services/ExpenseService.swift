@@ -14,7 +14,7 @@ protocol ExpenseServiceProtocol {
     var isLoading: Bool { get }
     var error: APIError? { get }
     
-    func createExpense(title: String, amount: Double, paidBy: String, groupId: String, splitType: String, date: String, description: String?)
+    func createExpense(title: String, amount: Double, paidBy: String, groupId: String, splitType: String, date: String, description: String?, completion: @escaping (Bool) -> Void)
     func clearError()
 }
 
@@ -32,8 +32,11 @@ class ExpenseService: ObservableObject, ExpenseServiceProtocol {
     }
     
     // MARK: - Public Methods
-    func createExpense(title: String, amount: Double, paidBy: String, groupId: String, splitType: String = "equal", date: String, description: String? = nil) {
-        guard !isLoading else { return }
+    func createExpense(title: String, amount: Double, paidBy: String, groupId: String, splitType: String = "equal", date: String, description: String? = nil, completion: @escaping (Bool) -> Void) {
+        guard !isLoading else { 
+            completion(false)
+            return 
+        }
         
         isLoading = true
         error = nil
@@ -49,16 +52,18 @@ class ExpenseService: ObservableObject, ExpenseServiceProtocol {
         )
         .receive(on: DispatchQueue.main)
         .sink(
-            receiveCompletion: { [weak self] completion in
+            receiveCompletion: { [weak self] completionResult in
                 self?.isLoading = false
                 
-                if case .failure(let error) = completion {
+                if case .failure(let error) = completionResult {
                     self?.error = error
                     print("🚨 Error creating expense: \(error.localizedDescription)")
+                    completion(false)
                 }
             },
             receiveValue: { [weak self] expense in
                 print("✅ Successfully created expense: \(expense.title) - ₹\(expense.amount)")
+                completion(true)
             }
         )
         .store(in: &cancellables)

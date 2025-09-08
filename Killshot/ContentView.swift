@@ -627,12 +627,14 @@ struct AddExpenseView: View {
                     splitType: "equal",
                     date: dateString,
                     description: nil
-                )
-                
-                // Refresh groups to show updated data
-                groupService.refreshGroups()
-                
-                dismiss()
+                ) { [weak groupService] success in
+                    if success {
+                        // Refresh groups to show updated data
+                        groupService?.refreshGroups()
+                        // Dismiss the sheet
+                        dismiss()
+                    }
+                }
             } else {
                 print("Please fill in all required fields and select a group")
             }
