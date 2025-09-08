@@ -85,14 +85,14 @@ class APIService: APIServiceProtocol {
     
     // MARK: - Groups API Methods
     func fetchGroups() -> AnyPublisher<[Group], APIError> {
-        return request<GroupsResponse>(endpoint: "/groups")
-            .map(\.data)
+        return request<GroupsResponse>(endpoint: "/groups", method: .GET, body: nil)
+            .map { response in response.data }
             .eraseToAnyPublisher()
     }
     
     func fetchGroup(id: String) -> AnyPublisher<GroupDetail, APIError> {
-        return request<GroupResponse>(endpoint: "/groups/\(id)")
-            .map(\.data)
+        return request<GroupResponse>(endpoint: "/groups/\(id)", method: .GET, body: nil)
+            .map { response in response.data }
             .eraseToAnyPublisher()
     }
     
@@ -105,7 +105,7 @@ class APIService: APIServiceProtocol {
         }
         
         return request<APIResponse<Group>>(endpoint: "/groups", method: .POST, body: body)
-            .compactMap(\.data)
+            .compactMap { response in response.data }
             .eraseToAnyPublisher()
     }
     
@@ -118,12 +118,12 @@ class APIService: APIServiceProtocol {
         }
         
         return request<APIResponse<Group>>(endpoint: "/groups/\(id)", method: .PUT, body: body)
-            .compactMap(\.data)
+            .compactMap { response in response.data }
             .eraseToAnyPublisher()
     }
     
     func deleteGroup(id: String) -> AnyPublisher<Void, APIError> {
-        return request<APIResponse<EmptyResponse>>(endpoint: "/groups/\(id)", method: .DELETE)
+        return request<APIResponse<EmptyResponse>>(endpoint: "/groups/\(id)", method: .DELETE, body: nil)
             .map { _ in () }
             .eraseToAnyPublisher()
     }
