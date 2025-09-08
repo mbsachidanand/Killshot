@@ -286,7 +286,7 @@ struct AddExpenseView: View {
     @State private var title = ""
     @State private var amount = ""
     @State private var paidBy = "Rishab (me)"
-    @State private var when = "7 Sept 2025"
+    @State private var when = Date()
     @State private var group = "Group 1"
     @State private var splitType = "Equally"
     
@@ -344,7 +344,7 @@ struct AddExpenseView: View {
                     HStack(spacing: 16) {
                         dropdownField(label: "Paid by", value: $paidBy, options: ["Rishab (me)", "Person 2", "Person 3", "Person 4"])
                         
-                        dropdownField(label: "When", value: $when, options: ["7 Sept 2025", "6 Sept 2025", "8 Sept 2025"])
+                        datePickerField
                     }
                     
                     dropdownField(label: "Group", value: $group, options: ["Group 1", "Group 2", "Group 3", "Group 4"])
@@ -442,6 +442,47 @@ struct AddExpenseView: View {
         }
     }
     
+    // MARK: - Date Picker Field
+    private var datePickerField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("When")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+            
+            HStack {
+                Text(formatDate(when))
+                    .font(.body)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                Image(systemName: "calendar")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+            .background(Color.white)
+            .cornerRadius(12)
+            .onTapGesture {
+                // This will be handled by the DatePicker overlay
+            }
+            .overlay(
+                DatePicker("", selection: $when, displayedComponents: .date)
+                    .datePickerStyle(CompactDatePickerStyle())
+                    .opacity(0.01) // Make invisible but still tappable
+            )
+        }
+    }
+    
+    // MARK: - Date Formatting Helper
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: date)
+    }
+    
     // MARK: - Split Among Section
     private var splitAmongSection: some View {
         VStack(spacing: 0) {
@@ -498,7 +539,7 @@ struct AddExpenseView: View {
         Button(action: {
             // Handle add expense action
             if !title.isEmpty && !amount.isEmpty {
-                print("Add expense: \(title) - ₹\(amount)")
+                print("Add expense: \(title) - ₹\(amount) on \(formatDate(when))")
                 dismiss()
             } else {
                 print("Please fill in all required fields")
