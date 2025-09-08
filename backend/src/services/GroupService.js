@@ -23,7 +23,7 @@ class GroupService {
         description: 'Expenses for our weekend getaway',
         members: [
           { id: '1', name: 'Rishab', email: 'rishab@example.com' },
-          { id: '2', name: 'Person 2', email: 'person2@example.com' }
+          { id: '2', name: 'Sarah', email: 'sarah@example.com' }
         ]
       },
       {
@@ -32,7 +32,7 @@ class GroupService {
         description: 'Daily lunch expenses with colleagues',
         members: [
           { id: '1', name: 'Rishab', email: 'rishab@example.com' },
-          { id: '3', name: 'Person 3', email: 'person3@example.com' }
+          { id: '3', name: 'Alex', email: 'alex@example.com' }
         ]
       },
       {
@@ -41,7 +41,7 @@ class GroupService {
         description: 'Monthly rent and utility bills',
         members: [
           { id: '1', name: 'Rishab', email: 'rishab@example.com' },
-          { id: '4', name: 'Person 4', email: 'person4@example.com' }
+          { id: '4', name: 'Emma', email: 'emma@example.com' }
         ]
       },
       {
@@ -50,8 +50,8 @@ class GroupService {
         description: 'Shared gym membership and fitness expenses',
         members: [
           { id: '1', name: 'Rishab', email: 'rishab@example.com' },
-          { id: '2', name: 'Person 2', email: 'person2@example.com' },
-          { id: '3', name: 'Person 3', email: 'person3@example.com' }
+          { id: '2', name: 'Sarah', email: 'sarah@example.com' },
+          { id: '3', name: 'Alex', email: 'alex@example.com' }
         ]
       }
     ];
