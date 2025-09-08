@@ -292,6 +292,7 @@ struct AddExpenseView: View {
     @State private var splitType = "Equally"
     
     @StateObject private var groupService = GroupService()
+    @StateObject private var expenseService = ExpenseService()
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -607,7 +608,30 @@ struct AddExpenseView: View {
         Button(action: {
             // Handle add expense action
             if !title.isEmpty && !amount.isEmpty && selectedGroup != nil {
-                print("Add expense: \(title) - ₹\(amount) on \(formatDate(when)) for group: \(selectedGroup?.name ?? "Unknown")")
+                guard let group = selectedGroup,
+                      let amountValue = Double(amount) else {
+                    print("Invalid amount or group")
+                    return
+                }
+                
+                // Format date for API
+                let formatter = ISO8601DateFormatter()
+                let dateString = formatter.string(from: when)
+                
+                // Create expense
+                expenseService.createExpense(
+                    title: title,
+                    amount: amountValue,
+                    paidBy: "1", // For now, hardcode to user ID "1" (Rishab)
+                    groupId: group.id,
+                    splitType: "equal",
+                    date: dateString,
+                    description: nil
+                )
+                
+                // Refresh groups to show updated data
+                groupService.refreshGroups()
+                
                 dismiss()
             } else {
                 print("Please fill in all required fields and select a group")

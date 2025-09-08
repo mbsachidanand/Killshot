@@ -15,6 +15,7 @@ protocol APIServiceProtocol {
     func createGroup(name: String, description: String?) -> AnyPublisher<Group, APIError>
     func updateGroup(id: String, name: String?, description: String?) -> AnyPublisher<Group, APIError>
     func deleteGroup(id: String) -> AnyPublisher<Void, APIError>
+    func createExpense(title: String, amount: Double, paidBy: String, groupId: String, splitType: String, date: String, description: String?) -> AnyPublisher<Expense, APIError>
 }
 
 // MARK: - API Error
@@ -135,6 +136,28 @@ class APIService: APIServiceProtocol {
             .map { (_: APIResponse<EmptyResponse>) in () }
             .eraseToAnyPublisher()
     }
+    
+    // MARK: - Expenses API Methods
+    func createExpense(title: String, amount: Double, paidBy: String, groupId: String, splitType: String = "equal", date: String, description: String? = nil) -> AnyPublisher<Expense, APIError> {
+        let expenseData = CreateExpenseRequest(
+            title: title,
+            amount: amount,
+            paidBy: paidBy,
+            groupId: groupId,
+            splitType: splitType,
+            date: date,
+            description: description
+        )
+        
+        guard let body = try? JSONEncoder().encode(expenseData) else {
+            return Fail(error: APIError.unknownError)
+                .eraseToAnyPublisher()
+        }
+        
+        return request(endpoint: "/expenses", method: .POST, body: body)
+            .compactMap { (response: APIResponse<Expense>) in response.data }
+            .eraseToAnyPublisher()
+    }
 }
 
 // MARK: - HTTP Methods
@@ -167,4 +190,18 @@ struct UpdateGroupRequest: Codable {
 
 struct EmptyResponse: Codable {
     // Empty response for DELETE operations
+}
+
+struct CreateExpenseRequest: Codable {
+    let title: String
+    let amount: Double
+    let paidBy: String
+    let groupId: String
+    let splitType: String
+    let date: String
+    let description: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case title, amount, paidBy, groupId, splitType, date, description
+    }
 }

@@ -32,7 +32,7 @@ class ExpenseController {
 
             // Check if group exists
             try {
-                const group = this.groupService.getGroupById(groupId);
+                const group = await this.groupService.getGroupById(groupId);
                 
                 // Get group members for split calculation
                 const participants = group.members;
@@ -68,15 +68,15 @@ class ExpenseController {
                 }
 
                 // Create the expense
-                const expense = this.expenseService.createExpense(expenseData);
+                const expense = await this.expenseService.createExpense(expenseData);
 
                 // Add expense to the group
-                this.groupService.addExpenseToGroup(groupId, expense);
+                await this.groupService.addExpenseToGroup(groupId, expense);
 
                 res.status(201).json({
                     success: true,
                     message: 'Expense created successfully',
-                    data: expense.toJSON()
+                    data: expense
                 });
 
             } catch (groupError) {
