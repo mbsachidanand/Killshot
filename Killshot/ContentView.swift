@@ -290,6 +290,8 @@ struct AddExpenseView: View {
     @State private var selectedGroup: Group?
     @State private var showingGroupPicker = false
     @State private var splitType = "Equally"
+    @State private var isExpenseCreated = false
+    @State private var showSuccessAlert = false
     
     @StateObject private var groupService = GroupService()
     @StateObject private var expenseService = ExpenseService()
@@ -299,7 +301,7 @@ struct AddExpenseView: View {
         VStack(spacing: 0) {
             // Navigation header
             HStack {
-                Button("Cancel") {
+                Button(isExpenseCreated ? "Done" : "Cancel") {
                     dismiss()
                 }
                 .foregroundColor(.blue)
@@ -329,6 +331,27 @@ struct AddExpenseView: View {
             
             // Main content with light grey background
             VStack(spacing: 0) {
+                // Success overlay
+                if isExpenseCreated {
+                    VStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(.green)
+                        
+                        Text("Expense Added Successfully!")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.green)
+                        
+                        Text("Your expense has been added to \(selectedGroup?.name ?? "the group")")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.vertical, 40)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.green.opacity(0.1))
+                } else {
                 // Input fields section
                 VStack(spacing: 20) {
                     inputField(label: "Title", text: $title, placeholder: "Enter expense title")
@@ -588,6 +611,7 @@ struct AddExpenseView: View {
                     .cornerRadius(12)
                 }
                 .padding(.horizontal, 20)
+                }
             }
         }
         .padding(.top, 0)
@@ -629,28 +653,60 @@ struct AddExpenseView: View {
                     description: nil
                 ) { [weak groupService] success in
                     if success {
+                        // Mark as created and show success feedback
+                        isExpenseCreated = true
+                        showSuccessAlert = true
+                        
                         // Refresh groups to show updated data
                         groupService?.refreshGroups()
-                        // Dismiss the sheet
-                        dismiss()
+                        
+                        // Auto-dismiss after 2 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            dismiss()
+                        }
                     }
                 }
             } else {
                 print("Please fill in all required fields and select a group")
             }
         }) {
-            Text("Add")
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(isFormValid ? Color.blue : Color.gray)
-                .cornerRadius(12)
+            HStack {
+                if expenseService.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(0.8)
+                }
+                
+                Text(expenseService.isLoading ? "Adding..." : (isExpenseCreated ? "Added!" : "Add"))
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background(
+                isExpenseCreated ? Color.green : 
+                (isFormValid && !expenseService.isLoading ? Color.blue : Color.gray)
+            )
+            .cornerRadius(12)
         }
-        .disabled(!isFormValid)
+        .disabled(!isFormValid || expenseService.isLoading)
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
+        .alert("Expense Added!", isPresented: $showSuccessAlert) {
+            Button("OK") {
+                dismiss()
+            }
+        } message: {
+            Text("Your expense has been successfully added to \(selectedGroup?.name ?? "the group").")
+        }
+        .alert("Error", isPresented: .constant(expenseService.error != nil)) {
+            Button("OK") {
+                expenseService.clearError()
+            }
+        } message: {
+            Text(expenseService.error?.localizedDescription ?? "An error occurred while creating the expense.")
+        }
     }
     
     // MARK: - Form Validation
