@@ -67,12 +67,12 @@ class GroupService {
 
   /**
    * Get all groups
-   * @returns {Array} Array of group summaries
+   * @returns {Array} Array of full group data
    */
   getAllGroups() {
     try {
       const groups = Array.from(this.groups.values());
-      return groups.map(group => group.getSummary());
+      return groups.map(group => group.toJSON());
     } catch (error) {
       throw new Error(`Failed to fetch groups: ${error.message}`);
     }
