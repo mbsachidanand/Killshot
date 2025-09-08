@@ -283,8 +283,8 @@ struct GroupDetailView: View {
 
 // MARK: - Add Expense View
 struct AddExpenseView: View {
-    @State private var title = "Expense 1"
-    @State private var amount = "250"
+    @State private var title = ""
+    @State private var amount = ""
     @State private var paidBy = "Rishab (me)"
     @State private var when = "7 Sept 2025"
     @State private var group = "Group 1"
@@ -336,7 +336,7 @@ struct AddExpenseView: View {
             VStack(spacing: 0) {
                 // Input fields section
                 VStack(spacing: 20) {
-                    inputField(label: "Title", text: $title, placeholder: "Expense 1")
+                    inputField(label: "Title", text: $title, placeholder: "Enter expense title")
                     
                     amountField
                     
@@ -386,7 +386,7 @@ struct AddExpenseView: View {
                     .cornerRadius(12)
                 
                 // Amount field in its own separate white box
-                TextField("0", text: $amount)
+                TextField("Enter amount", text: $amount)
                     #if canImport(UIKit)
                     .keyboardType(UIKeyboardType.decimalPad)
                     #endif
@@ -497,8 +497,12 @@ struct AddExpenseView: View {
     private var addButton: some View {
         Button(action: {
             // Handle add expense action
-            print("Add expense: \(title) - ₹\(amount)")
-            dismiss()
+            if !title.isEmpty && !amount.isEmpty {
+                print("Add expense: \(title) - ₹\(amount)")
+                dismiss()
+            } else {
+                print("Please fill in all required fields")
+            }
         }) {
             Text("Add")
                 .font(.headline)
@@ -506,11 +510,17 @@ struct AddExpenseView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(Color.blue)
+                .background(isFormValid ? Color.blue : Color.gray)
                 .cornerRadius(12)
         }
+        .disabled(!isFormValid)
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
+    }
+    
+    // MARK: - Form Validation
+    private var isFormValid: Bool {
+        return !title.isEmpty && !amount.isEmpty
     }
 }
 
