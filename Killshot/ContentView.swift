@@ -482,12 +482,12 @@ struct AddExpenseView: View {
                     }
                     .navigationTitle("Select Date")
                     .toolbar {
-                        ToolbarItem(placement: .navigationBarLeading) {
+                        ToolbarItem(placement: .cancellationAction) {
                             Button("Cancel") {
                                 showDatePicker = false
                             }
                         }
-                        ToolbarItem(placement: .navigationBarTrailing) {
+                        ToolbarItem(placement: .confirmationAction) {
                             Button("Done") {
                                 showDatePicker = false
                             }
