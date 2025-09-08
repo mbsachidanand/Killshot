@@ -49,7 +49,7 @@ struct ContentView: View {
     
     // MARK: - App Title
     private var appTitle: some View {
-        Text("App name")
+        Text("Killshot")
             .font(.largeTitle)
             .fontWeight(.bold)
             .foregroundColor(.primary)
