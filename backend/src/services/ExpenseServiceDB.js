@@ -162,13 +162,29 @@ class ExpenseServiceDB {
         WHERE e.id = $1
       `;
       
-      const expense = await this.db.getOne(expenseQuery, [expenseId]);
-      if (!expense) {
+      const expenseData = await this.db.getOne(expenseQuery, [expenseId]);
+      if (!expenseData) {
         throw new Error(`Expense with ID ${expenseId} not found`);
       }
       
       // Get split details
-      expense.splitDetails = await this.getExpenseSplits(expenseId);
+      const splitDetails = await this.getExpenseSplits(expenseId);
+      
+      // Create Expense model instance
+      const Expense = require('../models/Expense');
+      const expense = new Expense({
+        id: expenseData.id,
+        title: expenseData.title,
+        amount: parseFloat(expenseData.amount),
+        paidBy: expenseData.paid_by,
+        groupId: expenseData.group_id,
+        splitType: expenseData.split_type,
+        splitDetails: splitDetails,
+        date: expenseData.date,
+        description: expenseData.description,
+        createdAt: expenseData.created_at,
+        updatedAt: expenseData.updated_at
+      });
       
       return expense;
     } catch (error) {

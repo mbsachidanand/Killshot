@@ -61,7 +61,7 @@ class ExpenseService: ObservableObject, ExpenseServiceProtocol {
                     completion(false)
                 }
             },
-            receiveValue: { [weak self] expense in
+            receiveValue: { expense in
                 print("✅ Successfully created expense: \(expense.title) - ₹\(expense.amount)")
                 completion(true)
             }

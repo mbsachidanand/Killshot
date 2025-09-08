@@ -103,14 +103,15 @@ class GroupServiceDB {
         group.expenses = group.expenses.map(expense => ({
           id: expense.id,
           title: expense.title,
-          amount: expense.amount.toString(),
+          amount: parseFloat(expense.amount),
           paidBy: expense.paid_by,
           splitType: expense.split_type,
           date: expense.date,
           groupId: expense.group_id,
           description: expense.description,
           createdAt: expense.created_at,
-          updatedAt: expense.updated_at
+          updatedAt: expense.updated_at,
+          splitDetails: [] // Initialize empty split details for now
         }));
         
         // Remove the original snake_case fields
@@ -210,14 +211,15 @@ class GroupServiceDB {
       group.expenses = group.expenses.map(expense => ({
         id: expense.id,
         title: expense.title,
-        amount: expense.amount.toString(),
+        amount: parseFloat(expense.amount),
         paidBy: expense.paid_by,
         splitType: expense.split_type,
         date: expense.date,
         groupId: expense.group_id,
         description: expense.description,
         createdAt: expense.created_at,
-        updatedAt: expense.updated_at
+        updatedAt: expense.updated_at,
+        splitDetails: [] // Initialize empty split details for now
       }));
       
       // Remove the original snake_case fields

@@ -25,7 +25,7 @@ struct Group: Codable, Identifiable {
     }
     
     var totalExpensesDouble: Double {
-        return expenses.reduce(0) { $0 + $1.amountDouble }
+        return expenses.reduce(0) { $0 + $1.amount }
     }
     
     enum CodingKeys: String, CodingKey {
@@ -64,22 +64,32 @@ struct GroupMember: Codable, Identifiable {
 struct Expense: Codable, Identifiable {
     let id: String
     let title: String
-    let amount: String
+    let amount: Double
     let paidBy: String
-    let date: String
     let groupId: String
     let splitType: String
-    let description: String?
+    let splitDetails: [SplitDetail]
+    let date: String
+    let description: String
     let createdAt: String
     let updatedAt: String
     
-    // Computed property for backward compatibility
-    var amountDouble: Double {
-        return Double(amount) ?? 0.0
+    enum CodingKeys: String, CodingKey {
+        case id, title, amount, paidBy, groupId, splitType, splitDetails, date, description, createdAt, updatedAt
     }
+}
+
+// MARK: - Split Detail Model
+struct SplitDetail: Codable, Identifiable {
+    let userId: String
+    let userName: String
+    let amount: Double
+    let percentage: Double
+    
+    var id: String { userId }
     
     enum CodingKeys: String, CodingKey {
-        case id, title, amount, paidBy, date, groupId, splitType, description, createdAt, updatedAt
+        case userId, userName, amount, percentage
     }
 }
 

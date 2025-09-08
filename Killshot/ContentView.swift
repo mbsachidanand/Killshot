@@ -18,9 +18,9 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             mainContent
-        }
-        .onAppear {
-            groupService.loadGroups()
+                .onAppear {
+                    groupService.loadGroups()
+                }
         }
         #if os(iOS)
         .fullScreenCover(isPresented: $showingAddExpense) {
@@ -379,6 +379,7 @@ struct AddExpenseView: View {
                 
                 // Add button
                 addButton
+                }
             }
             .onAppear {
                 groupService.loadGroups()
@@ -387,10 +388,7 @@ struct AddExpenseView: View {
         .background(Color.gray.opacity(0.05))
         .ignoresSafeArea(.all, edges: .all)
     }
-}
-
-// MARK: - AddExpenseView Extensions
-extension AddExpenseView {
+    
     // MARK: - Amount Field
     private var amountField: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -614,7 +612,6 @@ extension AddExpenseView {
                     .cornerRadius(12)
                 }
                 .padding(.horizontal, 20)
-                }
             }
         }
         .padding(.top, 0)
