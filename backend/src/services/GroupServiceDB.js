@@ -33,16 +33,21 @@ class GroupServiceDB {
           g.description,
           g.created_at,
           g.updated_at,
-          COUNT(gm.member_id) as member_count,
-          COALESCE(SUM(e.amount), 0) as total_expenses
+          (SELECT COUNT(*) FROM group_members gm WHERE gm.group_id = g.id) as member_count,
+          (SELECT COALESCE(SUM(e.amount), 0) FROM expenses e WHERE e.group_id = g.id) as total_expenses
         FROM groups g
-        LEFT JOIN group_members gm ON g.id = gm.group_id
-        LEFT JOIN expenses e ON g.id = e.group_id
-        GROUP BY g.id, g.name, g.description, g.created_at, g.updated_at
         ORDER BY g.created_at DESC
       `;
       
       const groups = await this.db.getMany(groupsQuery);
+      
+      // Transform the data to match iOS expectations
+      for (const group of groups) {
+        group.memberCount = group.member_count.toString();
+        group.totalExpenses = group.total_expenses.toString();
+        group.createdAt = group.created_at;
+        group.updatedAt = group.updated_at;
+      }
       
       // Get members for each group
       for (const group of groups) {
@@ -134,7 +139,9 @@ class GroupServiceDB {
           g.name,
           g.description,
           g.created_at,
-          g.updated_at
+          g.updated_at,
+          (SELECT COUNT(*) FROM group_members gm WHERE gm.group_id = g.id) as member_count,
+          (SELECT COALESCE(SUM(e.amount), 0) FROM expenses e WHERE e.group_id = g.id) as total_expenses
         FROM groups g
         WHERE g.id = $1
       `;
@@ -143,6 +150,12 @@ class GroupServiceDB {
       if (!group) {
         throw new Error(`Group with ID ${groupId} not found`);
       }
+      
+      // Transform the data to match iOS expectations
+      group.memberCount = group.member_count.toString();
+      group.totalExpenses = group.total_expenses.toString();
+      group.createdAt = group.created_at;
+      group.updatedAt = group.updated_at;
       
       // Get members
       const membersQuery = `
