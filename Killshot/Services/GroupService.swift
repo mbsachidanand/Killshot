@@ -32,6 +32,9 @@ class GroupService: ObservableObject, GroupServiceProtocol {
     private let apiService: APIServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
+    // Callback for UI refresh
+    var onGroupsUpdated: (() -> Void)?
+    
     init(apiService: APIServiceProtocol = APIService.shared) {
         self.apiService = apiService
     }
@@ -66,12 +69,22 @@ class GroupService: ObservableObject, GroupServiceProtocol {
                     DispatchQueue.main.async {
                         self?.objectWillChange.send()
                         self?.groups = []
-                        self?.groups = groups
-                        print("✅ Updated groups array with \(groups.count) groups")
                         
-                        // Verify the data after assignment
-                        for group in self?.groups ?? [] {
-                            print("📊 Stored Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
+                        // Small delay to ensure UI processes the empty array
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                            self?.groups = groups
+                            print("✅ Updated groups array with \(groups.count) groups")
+                            
+                            // Verify the data after assignment
+                            for group in self?.groups ?? [] {
+                                print("📊 Stored Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
+                            }
+                            
+                            // Force UI refresh by notifying observers
+                            self?.objectWillChange.send()
+                            
+                            // Call the UI refresh callback
+                            self?.onGroupsUpdated?()
                         }
                     }
                 }

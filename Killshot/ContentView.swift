@@ -14,12 +14,17 @@ import UIKit
 struct ContentView: View {
     @StateObject private var groupService = GroupService()
     @State private var showingAddExpense = false
+    @State private var refreshID = UUID()
     
     var body: some View {
         NavigationView {
             mainContent
                 .onAppear {
                     groupService.loadGroups()
+                    // Set up callback to refresh UI
+                    groupService.onGroupsUpdated = {
+                        refreshID = UUID()
+                    }
                 }
         }
         #if os(iOS)
@@ -90,6 +95,7 @@ struct ContentView: View {
             }
         }
         .padding(.horizontal, 20)
+        .id(refreshID)
     }
     
     // MARK: - Group Row
