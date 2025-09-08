@@ -57,10 +57,17 @@ class GroupService: ObservableObject, GroupServiceProtocol {
                     }
                 },
                 receiveValue: { [weak self] groups in
-                    self?.groups = groups
-                    print("Successfully loaded \(groups.count) groups")
+                    print("🔄 Received \(groups.count) groups from API")
                     for group in groups {
-                        print("Group: \(group.name) - Total: \(group.totalExpensesDouble) - Expenses: \(group.expenses.count)")
+                        print("📊 API Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
+                    }
+                    
+                    self?.groups = groups
+                    print("✅ Updated groups array with \(groups.count) groups")
+                    
+                    // Verify the data after assignment
+                    for group in self?.groups ?? [] {
+                        print("📊 Stored Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
                     }
                 }
             )

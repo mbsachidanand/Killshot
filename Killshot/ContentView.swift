@@ -113,11 +113,14 @@ struct ContentView: View {
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         
-                        if group.totalExpensesDouble > 0 {
-                            Text("₹\(String(format: "%.0f", group.totalExpensesDouble))")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
+                    if group.totalExpensesDouble > 0 {
+                        Text("₹\(String(format: "%.0f", group.totalExpensesDouble))")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .onAppear {
+                                print("🎨 UI Updated for \(group.name): Total = \(group.totalExpensesDouble)")
+                            }
+                    }
                     }
                 }
                 
