@@ -23,17 +23,25 @@ struct ContentView: View {
                     groupService.loadGroups()
                     // Set up callback to refresh UI
                     groupService.onGroupsUpdated = {
-                        refreshID = UUID()
+                        DispatchQueue.main.async {
+                            refreshID = UUID()
+                        }
                     }
                 }
         }
         #if os(iOS)
         .fullScreenCover(isPresented: $showingAddExpense) {
-            AddExpenseView()
+            AddExpenseView(onExpenseAdded: {
+                // Force refresh when expense is added
+                refreshID = UUID()
+            })
         }
         #else
         .sheet(isPresented: $showingAddExpense) {
-            AddExpenseView()
+            AddExpenseView(onExpenseAdded: {
+                // Force refresh when expense is added
+                refreshID = UUID()
+            })
         }
         #endif
     }
@@ -100,6 +108,10 @@ struct ContentView: View {
         .padding(.horizontal, 20)
         .id(refreshID)
         .id(groupService.refreshTrigger)
+        .onChange(of: groupService.groups) {
+            // Force UI refresh when groups change
+            refreshID = UUID()
+        }
     }
     
     // MARK: - Group Row
@@ -306,6 +318,9 @@ struct AddExpenseView: View {
     @StateObject private var groupService = GroupService()
     @StateObject private var expenseService = ExpenseService()
     @Environment(\.dismiss) private var dismiss
+    
+    // Callback to refresh the main view
+    var onExpenseAdded: (() -> Void)?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -667,10 +682,11 @@ struct AddExpenseView: View {
                         isExpenseCreated = true
                         showSuccessAlert = true
                         
-                        // Refresh groups to show updated data with a small delay
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            groupService?.refreshGroups()
-                        }
+                        // Refresh groups immediately to show updated data
+                        groupService?.refreshGroups()
+                        
+                        // Also call the main view refresh callback
+                        onExpenseAdded?()
                         
                         // Auto-dismiss after 2 seconds
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {

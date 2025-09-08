@@ -62,8 +62,9 @@ class APIService: APIServiceProtocol {
     ) -> AnyPublisher<T, APIError> {
         
         // Add cache-busting parameter to force fresh requests
-        let cacheBuster = "?t=\(Int(Date().timeIntervalSince1970))"
-        let fullEndpoint = endpoint.contains("?") ? "\(endpoint)&t=\(Int(Date().timeIntervalSince1970))" : "\(endpoint)\(cacheBuster)"
+        let timestamp = Int(Date().timeIntervalSince1970 * 1000) // Use milliseconds for better uniqueness
+        let cacheBuster = "?t=\(timestamp)"
+        let fullEndpoint = endpoint.contains("?") ? "\(endpoint)&t=\(timestamp)" : "\(endpoint)\(cacheBuster)"
         
         guard let url = URL(string: "\(baseURL)\(fullEndpoint)") else {
             return Fail(error: APIError.invalidURL)

@@ -8,7 +8,7 @@
 import Foundation
 
 // MARK: - Group Model
-struct Group: Codable, Identifiable {
+struct Group: Codable, Identifiable, Equatable {
     let id: String
     let name: String
     let description: String
@@ -34,7 +34,7 @@ struct Group: Codable, Identifiable {
 }
 
 // MARK: - Group Detail Model
-struct GroupDetail: Codable, Identifiable {
+struct GroupDetail: Codable, Identifiable, Equatable {
     let id: String
     let name: String
     let description: String
@@ -49,7 +49,7 @@ struct GroupDetail: Codable, Identifiable {
 }
 
 // MARK: - Group Member Model
-struct GroupMember: Codable, Identifiable {
+struct GroupMember: Codable, Identifiable, Equatable {
     let id: String
     let name: String
     let email: String
@@ -61,7 +61,7 @@ struct GroupMember: Codable, Identifiable {
 }
 
 // MARK: - Expense Model
-struct Expense: Codable, Identifiable {
+struct Expense: Codable, Identifiable, Equatable {
     let id: String
     let title: String
     let amount: Double
@@ -80,7 +80,7 @@ struct Expense: Codable, Identifiable {
 }
 
 // MARK: - Split Detail Model
-struct SplitDetail: Codable, Identifiable {
+struct SplitDetail: Codable, Identifiable, Equatable {
     let userId: String
     let userName: String
     let amount: Double

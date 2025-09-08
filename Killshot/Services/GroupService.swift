@@ -66,36 +66,20 @@ class GroupService: ObservableObject, GroupServiceProtocol {
                         print("📊 API Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
                     }
                     
-                    // Force UI update by clearing and then setting the groups
-                    DispatchQueue.main.async {
-                        self?.objectWillChange.send()
-                        self?.groups = []
-                        
-                        // Small delay to ensure UI processes the empty array
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                            self?.groups = groups
-                            print("✅ Updated groups array with \(groups.count) groups")
-                            
-                            // Verify the data after assignment
-                            for group in self?.groups ?? [] {
-                                print("📊 Stored Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
-                            }
-                            
-                            // Force UI refresh by notifying observers multiple times
-                            self?.objectWillChange.send()
-                            
-                            // Additional delay and refresh to ensure UI updates
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                                self?.objectWillChange.send()
-                                
-                                // Update refresh trigger to force UI update
-                                self?.refreshTrigger = UUID()
-                                
-                                // Call the UI refresh callback
-                                self?.onGroupsUpdated?()
-                            }
-                        }
+                    // Update groups immediately on main thread
+                    self?.groups = groups
+                    print("✅ Updated groups array with \(groups.count) groups")
+                    
+                    // Verify the data after assignment
+                    for group in self?.groups ?? [] {
+                        print("📊 Stored Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
                     }
+                    
+                    // Update refresh trigger to force UI update
+                    self?.refreshTrigger = UUID()
+                    
+                    // Call the UI refresh callback
+                    self?.onGroupsUpdated?()
                 }
             )
             .store(in: &cancellables)
@@ -103,11 +87,7 @@ class GroupService: ObservableObject, GroupServiceProtocol {
     
     func refreshGroups() {
         print("🔄 Refreshing groups...")
-        DispatchQueue.main.async { [weak self] in
-            self?.objectWillChange.send()
-            self?.groups = []
-            self?.loadGroups()
-        }
+        loadGroups()
     }
     
     func createGroup(name: String, description: String? = nil) {
