@@ -1,7 +1,7 @@
 {
-  "name": "killshot-backend",
+  "name": "expense-manager-backend",
   "version": "1.0.0",
-  "description": "Backend API for Killshot expense splitting app",
+  "description": "Backend API for Expense Manager expense splitting app",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

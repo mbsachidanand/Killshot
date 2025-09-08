@@ -1,5 +1,5 @@
 /**
- * Killshot Backend Server
+ * Expense Manager Backend Server
  * Main server file for the expense splitting app API
  */
 
@@ -65,7 +65,7 @@ app.get('/health', async (req, res) => {
     
     res.status(200).json({
       success: true,
-      message: 'Killshot API is running',
+      message: 'Expense Manager API is running',
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
@@ -74,7 +74,7 @@ app.get('/health', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Killshot API is running but database is unhealthy',
+      message: 'Expense Manager API is running but database is unhealthy',
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
@@ -91,13 +91,13 @@ app.use(`/api/${API_VERSION}/expenses`, expenseRoutes);
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Welcome to Killshot API',
+    message: 'Welcome to Expense Manager API',
     version: API_VERSION,
     endpoints: {
       health: '/health',
       groups: `/api/${API_VERSION}/groups`,
       expenses: `/api/${API_VERSION}/expenses`,
-      documentation: 'https://github.com/mbsachidanand/Killshot'
+      documentation: 'https://github.com/mbsachidanand/ExpenseManager'
     }
   });
 });
@@ -118,7 +118,7 @@ async function startServer() {
     
     // Start server
     const server = app.listen(PORT, () => {
-      console.log(`🚀 Killshot API server running on port ${PORT}`);
+      console.log(`🚀 Expense Manager API server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔗 API Base URL: http://localhost:${PORT}/api/${API_VERSION}`);
       console.log(`❤️  Health Check: http://localhost:${PORT}/health`);

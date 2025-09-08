@@ -13,9 +13,9 @@ const dbConfig = {
   postgresql: {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT) || 5432,
-    database: process.env.DB_NAME || 'killshot_db',
-    user: process.env.DB_USER || 'killshot_user',
-    password: process.env.DB_PASSWORD || 'killshot_password',
+    database: process.env.DB_NAME || 'expense_manager_db',
+    user: process.env.DB_USER || 'expense_manager_user',
+    password: process.env.DB_PASSWORD || 'expense_manager_password',
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     pool: {
       min: parseInt(process.env.DB_POOL_MIN) || 2,
@@ -29,15 +29,15 @@ const dbConfig = {
   mysql: {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT) || 3306,
-    database: process.env.DB_NAME || 'killshot_db',
-    user: process.env.DB_USER || 'killshot_user',
-    password: process.env.DB_PASSWORD || 'killshot_password',
+    database: process.env.DB_NAME || 'expense_manager_db',
+    user: process.env.DB_USER || 'expense_manager_user',
+    password: process.env.DB_PASSWORD || 'expense_manager_password',
     connectionLimit: parseInt(process.env.DB_POOL_MAX) || 10,
   },
   
   // SQLite configuration (for future use)
   sqlite: {
-    filename: process.env.DB_NAME || './killshot.db',
+    filename: process.env.DB_NAME || './expense_manager.db',
   }
 };
 
