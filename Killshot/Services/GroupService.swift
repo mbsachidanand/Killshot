@@ -59,6 +59,9 @@ class GroupService: ObservableObject, GroupServiceProtocol {
                 receiveValue: { [weak self] groups in
                     self?.groups = groups
                     print("Successfully loaded \(groups.count) groups")
+                    for group in groups {
+                        print("Group: \(group.name) - Total: \(group.totalExpensesDouble) - Expenses: \(group.expenses.count)")
+                    }
                 }
             )
             .store(in: &cancellables)
