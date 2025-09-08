@@ -77,6 +77,8 @@ class APIService: APIServiceProtocol {
         request.setValue("no-cache", forHTTPHeaderField: "Pragma")
         request.httpBody = body
         
+        print("🌐 Making API request to: \(url.absoluteString)")
+        
         return session.dataTaskPublisher(for: request)
             .map(\.data)
             .decode(type: T.self, decoder: JSONDecoder())

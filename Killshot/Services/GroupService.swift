@@ -65,6 +65,7 @@ class GroupService: ObservableObject, GroupServiceProtocol {
     }
     
     func refreshGroups() {
+        print("🔄 Refreshing groups...")
         groups = []
         loadGroups()
     }

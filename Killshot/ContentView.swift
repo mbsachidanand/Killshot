@@ -657,8 +657,10 @@ struct AddExpenseView: View {
                         isExpenseCreated = true
                         showSuccessAlert = true
                         
-                        // Refresh groups to show updated data
-                        groupService?.refreshGroups()
+                        // Refresh groups to show updated data with a small delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            groupService?.refreshGroups()
+                        }
                         
                         // Auto-dismiss after 2 seconds
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {

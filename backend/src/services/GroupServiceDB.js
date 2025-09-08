@@ -382,7 +382,12 @@ class GroupServiceDB {
       
       // This method is called by ExpenseService
       // The expense is already created, we just need to verify the group exists
+      // The group totals will be calculated dynamically when fetched
       const group = await this.getGroupById(groupId);
+      
+      // Log for debugging
+      console.log(`✅ Expense ${expense.id} added to group ${groupId}`);
+      
       return group;
     } catch (error) {
       throw new Error(`Failed to add expense to group: ${error.message}`);
