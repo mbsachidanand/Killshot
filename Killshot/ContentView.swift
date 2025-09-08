@@ -288,6 +288,7 @@ struct AddExpenseView: View {
     @State private var paidBy = "Rishab (me)"
     @State private var when = Date()
     @State private var selectedGroup: Group?
+    @State private var showingGroupPicker = false
     @State private var splitType = "Equally"
     
     @StateObject private var groupService = GroupService()
@@ -493,15 +494,9 @@ struct AddExpenseView: View {
                 .background(Color.white)
                 .cornerRadius(12)
             } else {
-                Menu {
-                    ForEach(groupService.groups, id: \.id) { group in
-                        Button(action: {
-                            selectedGroup = group
-                        }) {
-                            Text(group.name)
-                        }
-                    }
-                } label: {
+                Button(action: {
+                    showingGroupPicker = true
+                }) {
                     HStack {
                         Text(selectedGroup?.name ?? "Select a group")
                             .font(.body)
@@ -517,6 +512,13 @@ struct AddExpenseView: View {
                     .padding(.vertical, 16)
                     .background(Color.white)
                     .cornerRadius(12)
+                }
+                .sheet(isPresented: $showingGroupPicker) {
+                    GroupPickerView(
+                        groups: groupService.groups,
+                        selectedGroup: $selectedGroup,
+                        isPresented: $showingGroupPicker
+                    )
                 }
             }
         }
@@ -628,6 +630,85 @@ struct AddExpenseView: View {
     // MARK: - Form Validation
     private var isFormValid: Bool {
         return !title.isEmpty && !amount.isEmpty && selectedGroup != nil
+    }
+}
+
+// MARK: - Group Picker View
+struct GroupPickerView: View {
+    let groups: [Group]
+    @Binding var selectedGroup: Group?
+    @Binding var isPresented: Bool
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Text("Select a Group")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    Button("Cancel") {
+                        isPresented = false
+                    }
+                    .font(.body)
+                    .foregroundColor(.blue)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 20)
+                .background(Color.white)
+                
+                // Groups list
+                ScrollView {
+                    LazyVStack(spacing: 8) {
+                        ForEach(groups, id: \.id) { group in
+                            Button(action: {
+                                selectedGroup = group
+                                isPresented = false
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(group.name)
+                                            .font(.body)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.primary)
+                                        
+                                        Text(group.description)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        
+                                        Text("\(group.memberCount) members")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    if selectedGroup?.id == group.id {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 16)
+                                .background(Color.white)
+                                .cornerRadius(12)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                }
+                .background(Color.gray.opacity(0.05))
+            }
+            .background(Color.gray.opacity(0.05))
+        }
     }
 }
 
