@@ -475,21 +475,24 @@ struct AddExpenseView: View {
                 NavigationView {
                     VStack {
                         DatePicker("Select Date", selection: $when, displayedComponents: .date)
-                            .datePickerStyle(WheelDatePickerStyle())
+                            .datePickerStyle(CompactDatePickerStyle())
                             .padding()
                         
                         Spacer()
                     }
                     .navigationTitle("Select Date")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .navigationBarItems(
-                        leading: Button("Cancel") {
-                            showDatePicker = false
-                        },
-                        trailing: Button("Done") {
-                            showDatePicker = false
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Cancel") {
+                                showDatePicker = false
+                            }
                         }
-                    )
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") {
+                                showDatePicker = false
+                            }
+                        }
+                    }
                 }
             }
         }
