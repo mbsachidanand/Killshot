@@ -387,7 +387,10 @@ struct AddExpenseView: View {
         .background(Color.gray.opacity(0.05))
         .ignoresSafeArea(.all, edges: .all)
     }
-    
+}
+
+// MARK: - AddExpenseView Extensions
+extension AddExpenseView {
     // MARK: - Amount Field
     private var amountField: some View {
         VStack(alignment: .leading, spacing: 8) {
