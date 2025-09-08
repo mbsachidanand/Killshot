@@ -450,27 +450,22 @@ struct AddExpenseView: View {
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
             
-            HStack {
-                Text(formatDate(when))
-                    .font(.body)
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                Image(systemName: "calendar")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.blue)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .background(Color.white)
-            .cornerRadius(12)
-            .overlay(
-                DatePicker("", selection: $when, displayedComponents: .date)
-                    .datePickerStyle(CompactDatePickerStyle())
-                    .labelsHidden()
-                    .opacity(0.01) // Nearly invisible but still interactive
-            )
+            DatePicker("", selection: $when, displayedComponents: .date)
+                .datePickerStyle(CompactDatePickerStyle())
+                .labelsHidden()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    HStack {
+                        Spacer()
+                        Image(systemName: "calendar")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.blue)
+                            .padding(.trailing, 16)
+                    }
+                )
         }
     }
     
