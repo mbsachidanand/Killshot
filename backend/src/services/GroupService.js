@@ -1,0 +1,212 @@
+/**
+ * Group Service
+ * Handles business logic for group operations
+ */
+
+const Group = require('../models/Group');
+
+class GroupService {
+  constructor() {
+    // In-memory storage for now - replace with database in production
+    this.groups = new Map();
+    this.initializeSampleData();
+  }
+
+  /**
+   * Initialize with sample data
+   */
+  initializeSampleData() {
+    const sampleGroups = [
+      {
+        id: '1',
+        name: 'Group 1',
+        description: 'Weekend trip expenses',
+        members: [
+          { id: '1', name: 'Rishab', email: 'rishab@example.com' },
+          { id: '2', name: 'Person 2', email: 'person2@example.com' }
+        ]
+      },
+      {
+        id: '2',
+        name: 'Group 2',
+        description: 'Office lunch group',
+        members: [
+          { id: '1', name: 'Rishab', email: 'rishab@example.com' },
+          { id: '3', name: 'Person 3', email: 'person3@example.com' }
+        ]
+      },
+      {
+        id: '3',
+        name: 'Group 3',
+        description: 'House sharing expenses',
+        members: [
+          { id: '1', name: 'Rishab', email: 'rishab@example.com' },
+          { id: '4', name: 'Person 4', email: 'person4@example.com' }
+        ]
+      },
+      {
+        id: '4',
+        name: 'Group 4',
+        description: 'Gym membership group',
+        members: [
+          { id: '1', name: 'Rishab', email: 'rishab@example.com' },
+          { id: '2', name: 'Person 2', email: 'person2@example.com' },
+          { id: '3', name: 'Person 3', email: 'person3@example.com' }
+        ]
+      }
+    ];
+
+    sampleGroups.forEach(groupData => {
+      const group = new Group(groupData.id, groupData.name, groupData.description);
+      groupData.members.forEach(member => {
+        group.addMember(member);
+      });
+      this.groups.set(groupData.id, group);
+    });
+  }
+
+  /**
+   * Get all groups
+   * @returns {Array} Array of group summaries
+   */
+  getAllGroups() {
+    try {
+      const groups = Array.from(this.groups.values());
+      return groups.map(group => group.getSummary());
+    } catch (error) {
+      throw new Error(`Failed to fetch groups: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get a specific group by ID
+   * @param {string} groupId - Group ID
+   * @returns {Object} Group details
+   */
+  getGroupById(groupId) {
+    try {
+      const group = this.groups.get(groupId);
+      if (!group) {
+        throw new Error(`Group with ID ${groupId} not found`);
+      }
+      return group.toJSON();
+    } catch (error) {
+      throw new Error(`Failed to fetch group: ${error.message}`);
+    }
+  }
+
+  /**
+   * Create a new group
+   * @param {Object} groupData - Group data
+   * @returns {Object} Created group
+   */
+  createGroup(groupData) {
+    try {
+      const { name, description = '' } = groupData;
+      
+      if (!name || name.trim() === '') {
+        throw new Error('Group name is required');
+      }
+
+      const id = (this.groups.size + 1).toString();
+      const group = new Group(id, name.trim(), description.trim());
+      this.groups.set(id, group);
+      
+      return group.getSummary();
+    } catch (error) {
+      throw new Error(`Failed to create group: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update a group
+   * @param {string} groupId - Group ID
+   * @param {Object} updateData - Data to update
+   * @returns {Object} Updated group
+   */
+  updateGroup(groupId, updateData) {
+    try {
+      const group = this.groups.get(groupId);
+      if (!group) {
+        throw new Error(`Group with ID ${groupId} not found`);
+      }
+
+      if (updateData.name !== undefined) {
+        if (!updateData.name || updateData.name.trim() === '') {
+          throw new Error('Group name cannot be empty');
+        }
+        group.name = updateData.name.trim();
+      }
+
+      if (updateData.description !== undefined) {
+        group.description = updateData.description.trim();
+      }
+
+      group.updatedAt = new Date();
+      return group.getSummary();
+    } catch (error) {
+      throw new Error(`Failed to update group: ${error.message}`);
+    }
+  }
+
+  /**
+   * Delete a group
+   * @param {string} groupId - Group ID
+   * @returns {boolean} Success status
+   */
+  deleteGroup(groupId) {
+    try {
+      const group = this.groups.get(groupId);
+      if (!group) {
+        throw new Error(`Group with ID ${groupId} not found`);
+      }
+
+      this.groups.delete(groupId);
+      return true;
+    } catch (error) {
+      throw new Error(`Failed to delete group: ${error.message}`);
+    }
+  }
+
+  /**
+   * Add member to group
+   * @param {string} groupId - Group ID
+   * @param {Object} memberData - Member data
+   * @returns {Object} Updated group
+   */
+  addMemberToGroup(groupId, memberData) {
+    try {
+      const group = this.groups.get(groupId);
+      if (!group) {
+        throw new Error(`Group with ID ${groupId} not found`);
+      }
+
+      group.addMember(memberData);
+      return group.getSummary();
+    } catch (error) {
+      throw new Error(`Failed to add member: ${error.message}`);
+    }
+  }
+
+  /**
+   * Remove member from group
+   * @param {string} groupId - Group ID
+   * @param {string} memberId - Member ID
+   * @returns {Object} Updated group
+   */
+  removeMemberFromGroup(groupId, memberId) {
+    try {
+      const group = this.groups.get(groupId);
+      if (!group) {
+        throw new Error(`Group with ID ${groupId} not found`);
+      }
+
+      group.removeMember(memberId);
+      return group.getSummary();
+    } catch (error) {
+      throw new Error(`Failed to remove member: ${error.message}`);
+    }
+  }
+}
+
+module.exports = GroupService;

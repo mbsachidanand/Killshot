@@ -12,13 +12,15 @@ import UIKit
 
 
 struct ContentView: View {
-    // Sample data for the groups
-    private let groups = ["Group 1", "Group 2", "Group 3", "Group 4"]
+    @StateObject private var groupService = GroupService()
     @State private var showingAddExpense = false
     
     var body: some View {
         NavigationView {
             mainContent
+        }
+        .onAppear {
+            groupService.loadGroups()
         }
         #if os(iOS)
         .fullScreenCover(isPresented: $showingAddExpense) {
@@ -75,20 +77,49 @@ struct ContentView: View {
     // MARK: - Groups List
     private var groupsList: some View {
         VStack(spacing: 8) {
-            ForEach(Array(groups.enumerated()), id: \.offset) { index, group in
-                groupRow(for: group, at: index)
+            if let error = groupService.error {
+                errorView(error)
+            } else if groupService.isLoading {
+                loadingView
+            } else if groupService.groups.isEmpty {
+                emptyStateView
+            } else {
+                ForEach(Array(groupService.groups.enumerated()), id: \.element.id) { index, group in
+                    groupRow(for: group, at: index)
+                }
             }
         }
         .padding(.horizontal, 20)
     }
     
     // MARK: - Group Row
-    private func groupRow(for group: String, at index: Int) -> some View {
-        NavigationLink(destination: GroupDetailView(groupName: group)) {
+    private func groupRow(for group: Group, at index: Int) -> some View {
+        NavigationLink(destination: GroupDetailView(group: group)) {
             HStack {
-                Text(group)
-                    .font(.body)
-                    .foregroundColor(.primary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(group.name)
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                    
+                    if !group.description.isEmpty {
+                        Text(group.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack(spacing: 8) {
+                        Label("\(group.memberCount)", systemImage: "person.2")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        
+                        if group.totalExpenses > 0 {
+                            Text("₹\(String(format: "%.0f", group.totalExpenses))")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
                 
                 Spacer()
                 
@@ -103,27 +134,147 @@ struct ContentView: View {
         }
         .buttonStyle(PlainButtonStyle())
     }
-}
-
-// Placeholder view for group detail
-struct GroupDetailView: View {
-    let groupName: String
     
-    var body: some View {
-        VStack {
-            Text("\(groupName) Details")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding()
+    // MARK: - Loading View
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.2)
             
-            Text("This is a placeholder for \(groupName) details.")
+            Text("Loading groups...")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+    }
+    
+    // MARK: - Empty State View
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "folder")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
+            
+            Text("No groups found")
+                .font(.headline)
+                .foregroundColor(.primary)
+            
+            Text("Create your first group to get started")
+                .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding()
+            
+            Button("Create Group") {
+                // TODO: Implement create group functionality
+            }
+            .font(.subheadline)
+            .foregroundColor(.blue)
+            .padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+    }
+    
+    // MARK: - Error View
+    private func errorView(_ error: APIError) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 48))
+                .foregroundColor(.red)
+            
+            Text("Something went wrong")
+                .font(.headline)
+                .foregroundColor(.primary)
+            
+            Text(error.localizedDescription)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            Button("Try Again") {
+                groupService.clearError()
+                groupService.refreshGroups()
+            }
+            .font(.subheadline)
+            .foregroundColor(.blue)
+            .padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+    }
+}
+
+// Group detail view
+struct GroupDetailView: View {
+    let group: Group
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // Group header
+            VStack(alignment: .leading, spacing: 8) {
+                Text(group.name)
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                if !group.description.isEmpty {
+                    Text(group.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                HStack(spacing: 16) {
+                    Label("\(group.memberCount) members", systemImage: "person.2")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    if group.totalExpenses > 0 {
+                        Label("₹\(String(format: "%.0f", group.totalExpenses)) total", systemImage: "indianrupeesign.circle")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding(.horizontal)
+            
+            Divider()
+            
+            // Group content
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Recent Expenses")
+                    .font(.headline)
+                    .padding(.horizontal)
+                
+                if group.totalExpenses == 0 {
+                    VStack(spacing: 12) {
+                        Image(systemName: "receipt")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                        
+                        Text("No expenses yet")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Add your first expense to get started")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+                } else {
+                    // TODO: Add expense list here
+                    Text("Expense list will be implemented here")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                }
+            }
             
             Spacer()
         }
-        .navigationTitle(groupName)
+        .navigationTitle(group.name)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
