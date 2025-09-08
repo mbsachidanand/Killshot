@@ -12,6 +12,7 @@ const rateLimit = require('express-rate-limit');
 
 // Import routes
 const groupRoutes = require('./routes/groupRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
 // Import middleware
 const { errorHandler, notFound } = require('./middleware/errorHandler');
@@ -67,6 +68,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use(`/api/${API_VERSION}/groups`, groupRoutes);
+app.use(`/api/${API_VERSION}/expenses`, expenseRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -77,6 +79,7 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       groups: `/api/${API_VERSION}/groups`,
+      expenses: `/api/${API_VERSION}/expenses`,
       documentation: 'https://github.com/mbsachidanand/Killshot'
     }
   });

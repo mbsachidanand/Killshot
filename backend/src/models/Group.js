@@ -49,6 +49,24 @@ class Group {
   }
 
   /**
+   * Remove an expense from the group
+   * @param {string} expenseId - ID of the expense to remove
+   */
+  removeExpense(expenseId) {
+    this.expenses = this.expenses.filter(expense => expense.id !== expenseId);
+    this.updatedAt = new Date();
+  }
+
+  /**
+   * Get expense by ID
+   * @param {string} expenseId - ID of the expense
+   * @returns {Object|null} Expense object or null if not found
+   */
+  getExpenseById(expenseId) {
+    return this.expenses.find(expense => expense.id === expenseId) || null;
+  }
+
+  /**
    * Get group summary
    * @returns {Object} Group summary with member count and total expenses
    */

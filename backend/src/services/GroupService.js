@@ -89,7 +89,7 @@ class GroupService {
       if (!group) {
         throw new Error(`Group with ID ${groupId} not found`);
       }
-      return group.toJSON();
+      return group;
     } catch (error) {
       throw new Error(`Failed to fetch group: ${error.message}`);
     }
@@ -205,6 +205,64 @@ class GroupService {
       return group.getSummary();
     } catch (error) {
       throw new Error(`Failed to remove member: ${error.message}`);
+    }
+  }
+
+  /**
+   * Add an expense to a group
+   * @param {string} groupId - Group ID
+   * @param {Object} expense - Expense object
+   * @returns {Object} Updated group
+   */
+  addExpenseToGroup(groupId, expense) {
+    try {
+      const group = this.groups.get(groupId);
+      if (!group) {
+        throw new Error(`Group with ID ${groupId} not found`);
+      }
+
+      group.addExpense(expense);
+      return group.getSummary();
+    } catch (error) {
+      throw new Error(`Failed to add expense to group: ${error.message}`);
+    }
+  }
+
+  /**
+   * Remove an expense from a group
+   * @param {string} groupId - Group ID
+   * @param {string} expenseId - Expense ID
+   * @returns {Object} Updated group
+   */
+  removeExpenseFromGroup(groupId, expenseId) {
+    try {
+      const group = this.groups.get(groupId);
+      if (!group) {
+        throw new Error(`Group with ID ${groupId} not found`);
+      }
+
+      group.removeExpense(expenseId);
+      return group.getSummary();
+    } catch (error) {
+      throw new Error(`Failed to remove expense from group: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get expenses for a group
+   * @param {string} groupId - Group ID
+   * @returns {Array} Array of expenses
+   */
+  getGroupExpenses(groupId) {
+    try {
+      const group = this.groups.get(groupId);
+      if (!group) {
+        throw new Error(`Group with ID ${groupId} not found`);
+      }
+
+      return group.expenses;
+    } catch (error) {
+      throw new Error(`Failed to get group expenses: ${error.message}`);
     }
   }
 }
