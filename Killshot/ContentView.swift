@@ -447,7 +447,7 @@ struct AddExpenseView: View {
                 .foregroundColor(.primary)
             
             DatePicker("", selection: $when, displayedComponents: .date)
-                .datePickerStyle(CompactDatePickerStyle())
+                .datePickerStyle(GraphicalDatePickerStyle())
                 .labelsHidden()
                 .padding(.horizontal, 16)
                 .padding(.vertical, 16)
