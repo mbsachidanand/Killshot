@@ -450,29 +450,13 @@ struct AddExpenseView: View {
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
             
-            HStack {
-                Text(formatDate(when))
-                    .font(.body)
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                Image(systemName: "calendar")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .background(Color.white)
-            .cornerRadius(12)
-            .onTapGesture {
-                // This will be handled by the DatePicker overlay
-            }
-            .overlay(
-                DatePicker("", selection: $when, displayedComponents: .date)
-                    .datePickerStyle(CompactDatePickerStyle())
-                    .opacity(0.01) // Make invisible but still tappable
-            )
+            DatePicker("", selection: $when, displayedComponents: .date)
+                .datePickerStyle(CompactDatePickerStyle())
+                .labelsHidden()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+                .background(Color.white)
+                .cornerRadius(12)
         }
     }
     
