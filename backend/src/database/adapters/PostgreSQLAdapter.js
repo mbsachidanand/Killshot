@@ -67,6 +67,58 @@ class PostgreSQLAdapter extends DatabaseAdapter {
   }
 
   /**
+   * Get many rows from a query
+   */
+  async getMany(sql, params = []) {
+    const result = await this.query(sql, params);
+    return result.rows;
+  }
+
+  /**
+   * Get one row from a query
+   */
+  async getOne(sql, params = []) {
+    const result = await this.query(sql, params);
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Insert a record and return the inserted data
+   */
+  async insert(table, data) {
+    const columns = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+    
+    const sql = `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders}) RETURNING *`;
+    const result = await this.query(sql, values);
+    return result.rows[0];
+  }
+
+  /**
+   * Update records and return the updated data
+   */
+  async update(table, data, where, whereParams = []) {
+    const columns = Object.keys(data);
+    const values = Object.values(data);
+    const setClause = columns.map((col, index) => `${col} = $${index + 1}`).join(', ');
+    
+    const sql = `UPDATE ${table} SET ${setClause} WHERE ${where} RETURNING *`;
+    const allParams = [...values, ...whereParams];
+    const result = await this.query(sql, allParams);
+    return result.rows;
+  }
+
+  /**
+   * Delete records and return the deleted data
+   */
+  async delete(table, where, whereParams = []) {
+    const sql = `DELETE FROM ${table} WHERE ${where} RETURNING *`;
+    const result = await this.query(sql, whereParams);
+    return result.rows;
+  }
+
+  /**
    * Execute a transaction
    */
   async transaction(callback) {

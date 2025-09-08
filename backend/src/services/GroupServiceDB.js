@@ -69,6 +69,7 @@ class GroupServiceDB {
             e.paid_by,
             e.split_type,
             e.date,
+            e.group_id,
             e.description,
             e.created_at,
             e.updated_at
@@ -78,6 +79,40 @@ class GroupServiceDB {
         `;
         
         group.expenses = await this.db.getMany(expensesQuery, [group.id]);
+        
+        // Transform the data to match iOS expectations
+        group.memberCount = group.member_count.toString();
+        group.totalExpenses = group.total_expenses.toString();
+        group.createdAt = group.created_at;
+        group.updatedAt = group.updated_at;
+        
+        // Transform members data
+        group.members = group.members.map(member => ({
+          id: member.id,
+          name: member.name,
+          email: member.email,
+          joinedAt: member.joined_at
+        }));
+        
+        // Transform expenses data
+        group.expenses = group.expenses.map(expense => ({
+          id: expense.id,
+          title: expense.title,
+          amount: expense.amount.toString(),
+          paidBy: expense.paid_by,
+          splitType: expense.split_type,
+          date: expense.date,
+          groupId: expense.group_id,
+          description: expense.description,
+          createdAt: expense.created_at,
+          updatedAt: expense.updated_at
+        }));
+        
+        // Remove the original snake_case fields
+        delete group.member_count;
+        delete group.total_expenses;
+        delete group.created_at;
+        delete group.updated_at;
       }
       
       return groups;
@@ -133,6 +168,7 @@ class GroupServiceDB {
           e.paid_by,
           e.split_type,
           e.date,
+          e.group_id,
           e.description,
           e.created_at,
           e.updated_at
@@ -142,6 +178,38 @@ class GroupServiceDB {
       `;
       
       group.expenses = await this.db.getMany(expensesQuery, [groupId]);
+      
+      // Transform the data to match iOS expectations
+      group.createdAt = group.created_at;
+      group.updatedAt = group.updated_at;
+      group.memberCount = group.members.length.toString();
+      group.totalExpenses = group.expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0).toString();
+      
+      // Transform members data
+      group.members = group.members.map(member => ({
+        id: member.id,
+        name: member.name,
+        email: member.email,
+        joinedAt: member.joined_at
+      }));
+      
+      // Transform expenses data
+      group.expenses = group.expenses.map(expense => ({
+        id: expense.id,
+        title: expense.title,
+        amount: expense.amount.toString(),
+        paidBy: expense.paid_by,
+        splitType: expense.split_type,
+        date: expense.date,
+        groupId: expense.group_id,
+        description: expense.description,
+        createdAt: expense.created_at,
+        updatedAt: expense.updated_at
+      }));
+      
+      // Remove the original snake_case fields
+      delete group.created_at;
+      delete group.updated_at;
       
       return group;
     } catch (error) {

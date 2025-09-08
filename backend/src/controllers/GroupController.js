@@ -18,7 +18,7 @@ class GroupController {
    */
   async getAllGroups(req, res) {
     try {
-      const groups = this.groupService.getAllGroups();
+      const groups = await this.groupService.getAllGroups();
       
       res.status(200).json({
         success: true,
@@ -44,7 +44,7 @@ class GroupController {
   async getGroupById(req, res) {
     try {
       const { id } = req.params;
-      const group = this.groupService.getGroupById(id);
+      const group = await this.groupService.getGroupById(id);
       
       res.status(200).json({
         success: true,

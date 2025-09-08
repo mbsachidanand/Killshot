@@ -109,12 +109,12 @@ struct ContentView: View {
                     }
                     
                     HStack(spacing: 8) {
-                        Label("\(group.memberCount)", systemImage: "person.2")
+                        Label("\(group.memberCountInt)", systemImage: "person.2")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         
-                        if group.totalExpenses > 0 {
-                            Text("₹\(String(format: "%.0f", group.totalExpenses))")
+                        if group.totalExpensesDouble > 0 {
+                            Text("₹\(String(format: "%.0f", group.totalExpensesDouble))")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
@@ -225,12 +225,12 @@ struct GroupDetailView: View {
                 }
                 
                 HStack(spacing: 16) {
-                    Label("\(group.memberCount) members", systemImage: "person.2")
+                    Label("\(group.memberCountInt) members", systemImage: "person.2")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    if group.totalExpenses > 0 {
-                        Label("₹\(String(format: "%.0f", group.totalExpenses)) total", systemImage: "indianrupeesign.circle")
+                    if group.totalExpensesDouble > 0 {
+                        Label("₹\(String(format: "%.0f", group.totalExpensesDouble)) total", systemImage: "indianrupeesign.circle")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -246,7 +246,7 @@ struct GroupDetailView: View {
                     .font(.headline)
                     .padding(.horizontal)
                 
-                if group.totalExpenses == 0 {
+                if group.totalExpensesDouble == 0 {
                     VStack(spacing: 12) {
                         Image(systemName: "receipt")
                             .font(.system(size: 32))
@@ -681,7 +681,7 @@ struct GroupPickerView: View {
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                         
-                                        Text("\(group.memberCount) members")
+                                        Text("\(group.memberCountInt) members")
                                             .font(.caption2)
                                             .foregroundColor(.secondary)
                                     }

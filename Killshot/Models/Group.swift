@@ -16,20 +16,20 @@ struct Group: Codable, Identifiable {
     let expenses: [Expense]
     let createdAt: String
     let updatedAt: String
+    let memberCount: String
+    let totalExpenses: String
     
     // Computed properties for backward compatibility
-    var memberCount: Int {
+    var memberCountInt: Int {
         return members.count
     }
     
-    var totalExpenses: Double {
-        return expenses.reduce(0) { $0 + $1.amount }
+    var totalExpensesDouble: Double {
+        return expenses.reduce(0) { $0 + $1.amountDouble }
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, name, description, members, expenses
-        case createdAt = "createdAt"
-        case updatedAt = "updatedAt"
+        case id, name, description, members, expenses, createdAt, updatedAt, memberCount, totalExpenses
     }
 }
 
@@ -44,9 +44,7 @@ struct GroupDetail: Codable, Identifiable {
     let updatedAt: String
     
     enum CodingKeys: String, CodingKey {
-        case id, name, description, members, expenses
-        case createdAt = "createdAt"
-        case updatedAt = "updatedAt"
+        case id, name, description, members, expenses, createdAt, updatedAt
     }
 }
 
@@ -58,8 +56,7 @@ struct GroupMember: Codable, Identifiable {
     let joinedAt: String
     
     enum CodingKeys: String, CodingKey {
-        case id, name, email
-        case joinedAt = "joinedAt"
+        case id, name, email, joinedAt
     }
 }
 
@@ -67,20 +64,22 @@ struct GroupMember: Codable, Identifiable {
 struct Expense: Codable, Identifiable {
     let id: String
     let title: String
-    let amount: Double
+    let amount: String
     let paidBy: String
-    let when: String
+    let date: String
     let groupId: String
+    let splitType: String
+    let description: String?
     let createdAt: String
     let updatedAt: String
     
+    // Computed property for backward compatibility
+    var amountDouble: Double {
+        return Double(amount) ?? 0.0
+    }
+    
     enum CodingKeys: String, CodingKey {
-        case id, title, amount
-        case paidBy = "paidBy"
-        case when
-        case groupId = "groupId"
-        case createdAt = "createdAt"
-        case updatedAt = "updatedAt"
+        case id, title, amount, paidBy, date, groupId, splitType, description, createdAt, updatedAt
     }
 }
 
@@ -101,7 +100,7 @@ struct GroupsResponse: Codable {
     let success: Bool
     let message: String
     let data: [Group]
-    let count: Int
+    let count: Int?
     let error: String?
     
     enum CodingKeys: String, CodingKey {

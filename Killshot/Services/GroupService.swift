@@ -51,7 +51,9 @@ class GroupService: ObservableObject, GroupServiceProtocol {
                     
                     if case .failure(let error) = completion {
                         self?.error = error
-                        print("Error loading groups: \(error.localizedDescription)")
+                        print("🚨 Error loading groups: \(error.localizedDescription)")
+                        print("🚨 Error type: \(type(of: error))")
+                        print("🚨 API Error: \(error)")
                     }
                 },
                 receiveValue: { [weak self] groups in

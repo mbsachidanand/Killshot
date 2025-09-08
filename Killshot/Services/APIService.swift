@@ -60,7 +60,11 @@ class APIService: APIServiceProtocol {
         body: Data? = nil
     ) -> AnyPublisher<T, APIError> {
         
-        guard let url = URL(string: "\(baseURL)\(endpoint)") else {
+        // Add cache-busting parameter to force fresh requests
+        let cacheBuster = "?t=\(Int(Date().timeIntervalSince1970))"
+        let fullEndpoint = endpoint.contains("?") ? "\(endpoint)&t=\(Int(Date().timeIntervalSince1970))" : "\(endpoint)\(cacheBuster)"
+        
+        guard let url = URL(string: "\(baseURL)\(fullEndpoint)") else {
             return Fail(error: APIError.invalidURL)
                 .eraseToAnyPublisher()
         }
@@ -68,13 +72,17 @@ class APIService: APIServiceProtocol {
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+        request.setValue("no-cache", forHTTPHeaderField: "Pragma")
         request.httpBody = body
         
         return session.dataTaskPublisher(for: request)
             .map(\.data)
             .decode(type: T.self, decoder: JSONDecoder())
             .mapError { error in
-                if error is DecodingError {
+                print("🔍 API Decoding Error: \(error)")
+                if let decodingError = error as? DecodingError {
+                    print("🔍 DecodingError details: \(decodingError)")
                     return APIError.decodingError
                 } else {
                     return APIError.networkError(error)
