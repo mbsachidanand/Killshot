@@ -117,9 +117,6 @@ struct ContentView: View {
                         Text("₹\(String(format: "%.0f", group.totalExpensesDouble))")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                            .onAppear {
-                                print("🎨 UI Updated for \(group.name): Total = \(group.totalExpensesDouble)")
-                            }
                     }
                     }
                 }

@@ -25,9 +25,7 @@ struct Group: Codable, Identifiable {
     }
     
     var totalExpensesDouble: Double {
-        let total = expenses.reduce(0) { $0 + $1.amount }
-        print("🔢 Calculating total for \(name): \(expenses.count) expenses, total = \(total)")
-        return total
+        return expenses.reduce(0) { $0 + $1.amount }
     }
     
     enum CodingKeys: String, CodingKey {

@@ -62,12 +62,17 @@ class GroupService: ObservableObject, GroupServiceProtocol {
                         print("📊 API Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
                     }
                     
-                    self?.groups = groups
-                    print("✅ Updated groups array with \(groups.count) groups")
-                    
-                    // Verify the data after assignment
-                    for group in self?.groups ?? [] {
-                        print("📊 Stored Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
+                    // Force UI update by clearing and then setting the groups
+                    DispatchQueue.main.async {
+                        self?.objectWillChange.send()
+                        self?.groups = []
+                        self?.groups = groups
+                        print("✅ Updated groups array with \(groups.count) groups")
+                        
+                        // Verify the data after assignment
+                        for group in self?.groups ?? [] {
+                            print("📊 Stored Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
+                        }
                     }
                 }
             )
@@ -76,8 +81,11 @@ class GroupService: ObservableObject, GroupServiceProtocol {
     
     func refreshGroups() {
         print("🔄 Refreshing groups...")
-        groups = []
-        loadGroups()
+        DispatchQueue.main.async { [weak self] in
+            self?.objectWillChange.send()
+            self?.groups = []
+            self?.loadGroups()
+        }
     }
     
     func createGroup(name: String, description: String? = nil) {
