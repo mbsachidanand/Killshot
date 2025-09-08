@@ -19,8 +19,8 @@ class GroupService {
     const sampleGroups = [
       {
         id: '1',
-        name: 'Group 1',
-        description: 'Weekend trip expenses',
+        name: 'Weekend Trip',
+        description: 'Expenses for our weekend getaway',
         members: [
           { id: '1', name: 'Rishab', email: 'rishab@example.com' },
           { id: '2', name: 'Person 2', email: 'person2@example.com' }
@@ -28,8 +28,8 @@ class GroupService {
       },
       {
         id: '2',
-        name: 'Group 2',
-        description: 'Office lunch group',
+        name: 'Office Lunch',
+        description: 'Daily lunch expenses with colleagues',
         members: [
           { id: '1', name: 'Rishab', email: 'rishab@example.com' },
           { id: '3', name: 'Person 3', email: 'person3@example.com' }
@@ -37,8 +37,8 @@ class GroupService {
       },
       {
         id: '3',
-        name: 'Group 3',
-        description: 'House sharing expenses',
+        name: 'House Sharing',
+        description: 'Monthly rent and utility bills',
         members: [
           { id: '1', name: 'Rishab', email: 'rishab@example.com' },
           { id: '4', name: 'Person 4', email: 'person4@example.com' }
@@ -46,8 +46,8 @@ class GroupService {
       },
       {
         id: '4',
-        name: 'Group 4',
-        description: 'Gym membership group',
+        name: 'Gym Membership',
+        description: 'Shared gym membership and fitness expenses',
         members: [
           { id: '1', name: 'Rishab', email: 'rishab@example.com' },
           { id: '2', name: 'Person 2', email: 'person2@example.com' },
