@@ -457,15 +457,6 @@ struct AddExpenseView: View {
                 .padding(.vertical, 16)
                 .background(Color.white)
                 .cornerRadius(12)
-                .overlay(
-                    HStack {
-                        Spacer()
-                        Image(systemName: "calendar")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.blue)
-                            .padding(.trailing, 16)
-                    }
-                )
         }
     }
     
