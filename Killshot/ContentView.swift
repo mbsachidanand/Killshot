@@ -802,7 +802,7 @@ struct AddExpenseView: View {
                         
                         // Pass the selected group to the parent view and dismiss
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            onExpenseAdded?(group)
+                            onExpenseAdded?(selectedGroup)
                             dismiss()
                         }
                     }
