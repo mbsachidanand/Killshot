@@ -16,6 +16,18 @@ struct ContentView: View {
     @State private var showingAddExpense = false
     @State private var refreshID = UUID()
     
+    // Current user ID - in a real app, this would come from authentication
+    private let currentUserId = "1" // Rishab's user ID
+    
+    // Filter groups to show only those where current user is a member
+    private var userGroups: [Group] {
+        return groupService.groups.filter { group in
+            group.members.contains { member in
+                member.id == currentUserId
+            }
+        }
+    }
+    
     var body: some View {
         NavigationView {
             mainContent
@@ -100,10 +112,10 @@ struct ContentView: View {
                 errorView(error)
             } else if groupService.isLoading {
                 loadingView
-            } else if groupService.groups.isEmpty {
+            } else if userGroups.isEmpty {
                 emptyStateView
             } else {
-                ForEach(Array(groupService.groups.enumerated()), id: \.element.id) { index, group in
+                ForEach(Array(userGroups.enumerated()), id: \.element.id) { index, group in
                     groupRow(for: group, at: index)
                         .onAppear {
                             print("🔄 UI: Rendering group \(group.name)")
@@ -335,6 +347,18 @@ struct AddExpenseView: View {
     @StateObject private var expenseService = ExpenseService()
     @Environment(\.dismiss) private var dismiss
     
+    // Current user ID - in a real app, this would come from authentication
+    private let currentUserId = "1" // Rishab's user ID
+    
+    // Filter groups to show only those where current user is a member
+    private var userGroups: [Group] {
+        return groupService.groups.filter { group in
+            group.members.contains { member in
+                member.id == currentUserId
+            }
+        }
+    }
+    
     // Callback to refresh the main view
     var onExpenseAdded: (() -> Void)?
     
@@ -549,7 +573,7 @@ struct AddExpenseView: View {
                 .padding(.vertical, 16)
                 .background(Color.white)
                 .cornerRadius(12)
-            } else if groupService.groups.isEmpty {
+            } else if userGroups.isEmpty {
                 HStack {
                     Text("No groups available")
                         .font(.body)
@@ -581,7 +605,7 @@ struct AddExpenseView: View {
                 }
                 .sheet(isPresented: $showingGroupPicker) {
                     GroupPickerView(
-                        groups: groupService.groups,
+                        groups: userGroups,
                         selectedGroup: $selectedGroup,
                         isPresented: $showingGroupPicker
                     )
