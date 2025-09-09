@@ -401,20 +401,29 @@ struct AddExpenseView: View {
             VStack(spacing: 0) {
                 // Success overlay
                 if isExpenseCreated {
-                    HStack {
+                    HStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.green)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white)
                         
                         Text("Expense added")
                             .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.green)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.green.opacity(0.1))
-                    .cornerRadius(20)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.green, Color.green.opacity(0.8)]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(25)
+                    .shadow(color: Color.green.opacity(0.3), radius: 8, x: 0, y: 4)
+                    .scaleEffect(1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isExpenseCreated)
                 } else {
                 // Input fields section
                 VStack(spacing: 20) {
