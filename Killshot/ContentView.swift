@@ -378,7 +378,7 @@ struct AddExpenseView: View {
                 
                 Spacer()
                 
-                Text("Add expense")
+                Text(isExpenseCreated ? "Expense added" : "Add expense")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
@@ -404,11 +404,6 @@ struct AddExpenseView: View {
                     VStack(spacing: 4) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 24))
-                            .foregroundColor(.green)
-                        
-                        Text("Added!")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
                             .foregroundColor(.green)
                     }
                     .padding(.vertical, 12)
