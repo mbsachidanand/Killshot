@@ -4,6 +4,7 @@
  */
 
 const express = require('express');
+const { body } = require('express-validator');
 const GroupController = require('../controllers/GroupController');
 const { commonValidations, handleValidationErrors, sanitizeInput } = require('../middleware/validation');
 const { cacheMiddleware, cacheKeys, invalidateCache } = require('../middleware/cache');
