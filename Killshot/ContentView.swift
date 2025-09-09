@@ -15,7 +15,6 @@ struct ContentView: View {
     @StateObject private var groupService = GroupService()
     @State private var showingAddExpense = false
     @State private var refreshID = UUID()
-    @State private var refreshTimer: Timer?
     
     var body: some View {
         NavigationView {
@@ -34,13 +33,6 @@ struct ContentView: View {
                         print("🔄 Refreshing groups on view appear...")
                         groupService.refreshGroups()
                     }
-                    
-                    // Start periodic refresh to ensure data stays fresh
-                    startPeriodicRefresh()
-                }
-                .onDisappear {
-                    // Stop periodic refresh when view disappears
-                    stopPeriodicRefresh()
                 }
         }
         #if os(iOS)
@@ -130,21 +122,11 @@ struct ContentView: View {
             // Force UI refresh when groups change
             print("🔄 Groups array changed, forcing UI refresh")
             refreshID = UUID()
-            
-            // Additional refresh after a short delay to ensure UI is fully updated
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                refreshID = UUID()
-            }
         }
         .onChange(of: groupService.refreshTrigger) {
             // Force UI refresh when refresh trigger changes
             print("🔄 Refresh trigger changed, forcing UI refresh")
             refreshID = UUID()
-            
-            // Additional refresh after a short delay to ensure UI is fully updated
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                refreshID = UUID()
-            }
         }
     }
     
@@ -259,21 +241,6 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
-    }
-    
-    // MARK: - Periodic Refresh Functions
-    private func startPeriodicRefresh() {
-        stopPeriodicRefresh() // Stop any existing timer
-        
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
-            print("🔄 Periodic refresh triggered...")
-            groupService.refreshGroups()
-        }
-    }
-    
-    private func stopPeriodicRefresh() {
-        refreshTimer?.invalidate()
-        refreshTimer = nil
     }
 }
 
@@ -731,15 +698,9 @@ struct AddExpenseView: View {
                         isExpenseCreated = true
                         showSuccessAlert = true
                         
-                        // Refresh groups with a longer delay to ensure database transaction is fully committed
+                        // Refresh groups with a delay to ensure database transaction is fully committed
                         print("🔄 Expense created successfully, refreshing groups...")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            groupService?.refreshGroups()
-                        }
-                        
-                        // Additional refresh after screen is rendered to ensure UI shows correct data
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            print("🔄 Secondary refresh after screen render...")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                             groupService?.refreshGroups()
                         }
                         
