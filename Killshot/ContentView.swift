@@ -369,7 +369,18 @@ struct AddExpenseView: View {
     
     // Convert members to display strings for dropdown
     private var memberDisplayOptions: [String] {
-        return availableMembers.map { member in
+        // Sort members to put current user first, then others alphabetically
+        let sortedMembers = availableMembers.sorted { member1, member2 in
+            if member1.id == currentUser.id {
+                return true // Current user comes first
+            } else if member2.id == currentUser.id {
+                return false // Other member comes after current user
+            } else {
+                return member1.name < member2.name // Alphabetical order for others
+            }
+        }
+        
+        return sortedMembers.map { member in
             if member.id == currentUser.id {
                 return "\(member.name) (me)"
             } else {
