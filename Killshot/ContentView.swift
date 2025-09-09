@@ -392,10 +392,10 @@ struct AddExpenseView: View {
                 .foregroundColor(.clear)
                 .disabled(true)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 80)
-            .padding(.bottom, 16)
-            .background(Color.gray.opacity(0.05))
+            .padding(.horizontal, 16)
+            .padding(.top, 60)
+            .padding(.bottom, 8)
+            .background(Color.gray.opacity(0.03))
             
             // Main content with light grey background
             VStack(spacing: 0) {
