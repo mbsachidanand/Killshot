@@ -696,11 +696,6 @@ struct AddExpenseView: View {
                         print("🔄 Expense created successfully, refreshing groups...")
                         groupService?.refreshGroups()
                         
-                        // Force immediate UI refresh
-                        DispatchQueue.main.async {
-                            self.refreshID = UUID()
-                        }
-                        
                         // Also call the main view refresh callback
                         onExpenseAdded?()
                         
