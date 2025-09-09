@@ -14,7 +14,6 @@ import UIKit
 struct ContentView: View {
     @StateObject private var groupService = GroupService()
     @State private var showingAddExpense = false
-    @State private var refreshID = UUID()
     
     // Current user information - in a real app, this would come from authentication
     private let currentUser = User(id: "1", name: "Rishab", email: "rishab@example.com")
@@ -33,32 +32,20 @@ struct ContentView: View {
             mainContent
                 .onAppear {
                     groupService.loadGroups()
-                    // Set up callback to refresh UI
-                    groupService.onGroupsUpdated = {
-                        DispatchQueue.main.async {
-                            refreshID = UUID()
-                        }
-                    }
-                    
-                    // Additional refresh after a delay to ensure fresh data
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        print("🔄 Refreshing groups on view appear...")
-                        groupService.refreshGroups()
-                    }
                 }
         }
         #if os(iOS)
         .fullScreenCover(isPresented: $showingAddExpense) {
             AddExpenseView(onExpenseAdded: {
-                // Force refresh when expense is added
-                refreshID = UUID()
+                // Refresh groups when expense is added
+                groupService.refreshGroups()
             })
         }
         #else
         .sheet(isPresented: $showingAddExpense) {
             AddExpenseView(onExpenseAdded: {
-                // Force refresh when expense is added
-                refreshID = UUID()
+                // Refresh groups when expense is added
+                groupService.refreshGroups()
             })
         }
         #endif
@@ -117,29 +104,10 @@ struct ContentView: View {
             } else {
                 ForEach(Array(userGroups.enumerated()), id: \.element.id) { index, group in
                     groupRow(for: group, at: index)
-                        .onAppear {
-                            print("🔄 UI: Rendering group \(group.name)")
-                            print("   - Backend totalExpenses: \(group.totalExpenses)")
-                            print("   - Calculated totalExpensesDouble: \(group.totalExpensesDouble)")
-                            print("   - Expenses count: \(group.expenses.count)")
-                            print("   - Expenses total: \(group.expenses.reduce(0) { $0 + $1.amount })")
-                        }
                 }
             }
         }
         .padding(.horizontal, 20)
-        .id(refreshID)
-        .id(groupService.refreshTrigger)
-        .onChange(of: groupService.groups) {
-            // Force UI refresh when groups change
-            print("🔄 Groups array changed, forcing UI refresh")
-            refreshID = UUID()
-        }
-        .onChange(of: groupService.refreshTrigger) {
-            // Force UI refresh when refresh trigger changes
-            print("🔄 Refresh trigger changed, forcing UI refresh")
-            refreshID = UUID()
-        }
     }
     
     // MARK: - Group Row
