@@ -4,33 +4,26 @@
  */
 
 const express = require('express');
-const { body, param } = require('express-validator');
 const GroupController = require('../controllers/GroupController');
+const { commonValidations, handleValidationErrors, sanitizeInput } = require('../middleware/validation');
+const { cacheMiddleware, cacheKeys, invalidateCache } = require('../middleware/cache');
 
 const router = express.Router();
 const groupController = new GroupController();
 
+// Sanitize input middleware
+router.use(sanitizeInput);
+
 // Validation middleware
 const validateGroupData = [
-  body('name')
-    .notEmpty()
-    .withMessage('Group name is required')
-    .isLength({ min: 1, max: 100 })
-    .withMessage('Group name must be between 1 and 100 characters')
-    .trim(),
-  body('description')
-    .optional()
-    .isLength({ max: 500 })
-    .withMessage('Description must be less than 500 characters')
-    .trim()
+  commonValidations.groupName,
+  commonValidations.description,
+  handleValidationErrors
 ];
 
 const validateGroupId = [
-  param('id')
-    .notEmpty()
-    .withMessage('Group ID is required')
-    .isLength({ min: 1 })
-    .withMessage('Group ID must be valid')
+  commonValidations.id,
+  handleValidationErrors
 ];
 
 const validateMemberData = [
@@ -63,14 +56,14 @@ const validateMemberId = [
  * @desc    Get all groups
  * @access  Public
  */
-router.get('/', groupController.getAllGroups.bind(groupController));
+router.get('/', cacheMiddleware(cacheKeys.groups, 2 * 60 * 1000), groupController.getAllGroups.bind(groupController));
 
 /**
  * @route   GET /api/v1/groups/:id
  * @desc    Get a specific group by ID
  * @access  Public
  */
-router.get('/:id', validateGroupId, groupController.getGroupById.bind(groupController));
+router.get('/:id', validateGroupId, cacheMiddleware(cacheKeys.groupById, 5 * 60 * 1000), groupController.getGroupById.bind(groupController));
 
 /**
  * @route   POST /api/v1/groups

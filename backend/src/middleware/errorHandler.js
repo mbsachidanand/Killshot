@@ -11,13 +11,24 @@
  * @param {Function} next - Express next function
  */
 const errorHandler = (err, req, res, next) => {
-  console.error('Error:', err);
+  // Enhanced logging with request context
+  console.error('Error Details:', {
+    message: err.message,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+    timestamp: new Date().toISOString()
+  });
 
   // Default error
   let error = {
     success: false,
     message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message
+    error: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message,
+    timestamp: new Date().toISOString(),
+    requestId: req.id || 'unknown'
   };
 
   // Mongoose validation error
@@ -31,26 +42,69 @@ const errorHandler = (err, req, res, next) => {
     return res.status(400).json(error);
   }
 
-  // Mongoose duplicate key error
-  if (err.code === 11000) {
+  // PostgreSQL duplicate key error
+  if (err.code === '23505') {
     const message = 'Duplicate field value entered';
     error = {
       success: false,
       message: 'Duplicate Error',
-      error: message
+      error: message,
+      timestamp: new Date().toISOString(),
+      requestId: req.id || 'unknown'
     };
     return res.status(400).json(error);
   }
 
-  // Mongoose cast error
-  if (err.name === 'CastError') {
-    const message = 'Resource not found';
+  // PostgreSQL foreign key constraint error
+  if (err.code === '23503') {
+    const message = 'Referenced record not found';
     error = {
       success: false,
-      message: 'Not Found',
-      error: message
+      message: 'Reference Error',
+      error: message,
+      timestamp: new Date().toISOString(),
+      requestId: req.id || 'unknown'
     };
-    return res.status(404).json(error);
+    return res.status(400).json(error);
+  }
+
+  // PostgreSQL not null constraint error
+  if (err.code === '23502') {
+    const message = 'Required field is missing';
+    error = {
+      success: false,
+      message: 'Validation Error',
+      error: message,
+      timestamp: new Date().toISOString(),
+      requestId: req.id || 'unknown'
+    };
+    return res.status(400).json(error);
+  }
+
+  // PostgreSQL check constraint error
+  if (err.code === '23514') {
+    const message = 'Data validation failed';
+    error = {
+      success: false,
+      message: 'Validation Error',
+      error: message,
+      timestamp: new Date().toISOString(),
+      requestId: req.id || 'unknown'
+    };
+    return res.status(400).json(error);
+  }
+
+  // Cast error (invalid ID format)
+  if (err.name === 'CastError') {
+    const message = 'Invalid ID format';
+    error = {
+      success: false,
+      message: 'Invalid Input',
+      error: message,
+      timestamp: new Date().toISOString(),
+      requestId: req.id || 'unknown'
+    };
+    return res.status(400).json(error);
   }
 
   // JWT errors

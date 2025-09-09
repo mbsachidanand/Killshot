@@ -19,10 +19,14 @@ const databaseFactory = require('./database/DatabaseFactory');
 
 // Import middleware
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const requestIdMiddleware = require('./middleware/requestId');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const API_VERSION = process.env.API_VERSION || 'v1';
+
+// Request ID middleware (should be first)
+app.use(requestIdMiddleware);
 
 // Security middleware
 app.use(helmet());

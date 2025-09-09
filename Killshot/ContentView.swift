@@ -56,8 +56,10 @@ struct ContentView: View {
         VStack(spacing: 0) {
             appTitle
             addExpenseButton
-            groupsList
-            Spacer()
+            ScrollView {
+                groupsList
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color.gray.opacity(0.1))
         #if os(iOS)
@@ -73,6 +75,8 @@ struct ContentView: View {
             .foregroundColor(.primary)
             .padding(.top, 20)
             .padding(.bottom, 30)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityLabel("Expense Manager - Track and split expenses with your groups")
     }
     
     // MARK: - Add Expense Button
@@ -80,16 +84,31 @@ struct ContentView: View {
         Button(action: {
             showingAddExpense = true
         }) {
-            Text("Add expense")
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(Color.blue)
-                .cornerRadius(12)
+            HStack {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                Text("Add expense")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(12)
+            .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 30)
+        .accessibilityLabel("Add new expense")
+        .accessibilityHint("Tap to create a new expense for any group")
+        .buttonStyle(PlainButtonStyle())
     }
     
     // MARK: - Groups List
@@ -108,6 +127,7 @@ struct ContentView: View {
             }
         }
         .padding(.horizontal, 20)
+        .padding(.bottom, 20)
     }
     
     // MARK: - Group Row
@@ -119,23 +139,30 @@ struct ContentView: View {
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
+                        .lineLimit(1)
                     
                     if !group.description.isEmpty {
                         Text(group.description)
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .lineLimit(2)
                     }
                     
-                    HStack(spacing: 8) {
+                    HStack(spacing: 12) {
                         Label("\(group.memberCountInt)", systemImage: "person.2")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         
-                    if group.totalExpensesDouble > 0 {
-                        Text("₹\(String(format: "%.0f", group.totalExpensesDouble))")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
+                        if group.totalExpensesDouble > 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: "indianrupeesign.circle")
+                                    .font(.caption2)
+                                Text("\(String(format: "%.0f", group.totalExpensesDouble))")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                            }
+                            .foregroundColor(.green)
+                        }
                     }
                 }
                 
@@ -149,8 +176,13 @@ struct ContentView: View {
             .padding(.vertical, 16)
             .background(Color.white)
             .cornerRadius(12)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(group.name) group with \(group.memberCountInt) members")
+        .accessibilityHint("Tap to view group details and expenses")
+        .accessibilityValue(group.totalExpensesDouble > 0 ? "Total expenses: ₹\(String(format: "%.0f", group.totalExpensesDouble))" : "No expenses yet")
     }
     
     // MARK: - Loading View

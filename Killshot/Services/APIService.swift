@@ -25,6 +25,11 @@ enum APIError: Error, LocalizedError {
     case decodingError
     case networkError(Error)
     case serverError(Int, String)
+    case validationError([String])
+    case unauthorized
+    case forbidden
+    case notFound
+    case rateLimited
     case unknownError
     
     var errorDescription: String? {
@@ -39,8 +44,37 @@ enum APIError: Error, LocalizedError {
             return "Network error: \(error.localizedDescription)"
         case .serverError(let code, let message):
             return "Server error \(code): \(message)"
+        case .validationError(let errors):
+            return "Validation failed: \(errors.joined(separator: ", "))"
+        case .unauthorized:
+            return "You are not authorized to perform this action"
+        case .forbidden:
+            return "Access to this resource is forbidden"
+        case .notFound:
+            return "The requested resource was not found"
+        case .rateLimited:
+            return "Too many requests. Please try again later"
         case .unknownError:
             return "An unknown error occurred"
+        }
+    }
+    
+    var recoverySuggestion: String? {
+        switch self {
+        case .networkError:
+            return "Please check your internet connection and try again"
+        case .serverError:
+            return "Please try again later or contact support if the problem persists"
+        case .validationError:
+            return "Please check your input and try again"
+        case .unauthorized, .forbidden:
+            return "Please log in again"
+        case .notFound:
+            return "The item you're looking for may have been deleted"
+        case .rateLimited:
+            return "Please wait a moment before trying again"
+        default:
+            return "Please try again or contact support if the problem persists"
         }
     }
 }
@@ -79,11 +113,43 @@ class APIService: APIServiceProtocol {
         request.httpBody = body
         
         return session.dataTaskPublisher(for: request)
-            .map(\.data)
+            .tryMap { data, response in
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw APIError.unknownError
+                }
+                
+                // Handle different HTTP status codes
+                switch httpResponse.statusCode {
+                case 200...299:
+                    return data
+                case 400:
+                    // Try to parse validation errors
+                    if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                        if let errors = errorResponse.errors {
+                            throw APIError.validationError(errors.map { $0.message })
+                        }
+                        throw APIError.serverError(400, errorResponse.message)
+                    }
+                    throw APIError.serverError(400, "Bad Request")
+                case 401:
+                    throw APIError.unauthorized
+                case 403:
+                    throw APIError.forbidden
+                case 404:
+                    throw APIError.notFound
+                case 429:
+                    throw APIError.rateLimited
+                case 500...599:
+                    throw APIError.serverError(httpResponse.statusCode, "Server Error")
+                default:
+                    throw APIError.serverError(httpResponse.statusCode, "Unknown Error")
+                }
+            }
             .decode(type: T.self, decoder: JSONDecoder())
             .mapError { error in
-                print("🔍 API Decoding Error: \(error)")
-                if let decodingError = error as? DecodingError {
+                if let apiError = error as? APIError {
+                    return apiError
+                } else if let decodingError = error as? DecodingError {
                     print("🔍 DecodingError details: \(decodingError)")
                     return APIError.decodingError
                 } else {
@@ -204,5 +270,28 @@ struct CreateExpenseRequest: Codable {
     
     enum CodingKeys: String, CodingKey {
         case title, amount, paidBy, groupId, splitType, date, description
+    }
+}
+
+// MARK: - Error Response Models
+struct ErrorResponse: Codable {
+    let success: Bool
+    let message: String
+    let errors: [ValidationError]?
+    let timestamp: String?
+    let requestId: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case success, message, errors, timestamp, requestId
+    }
+}
+
+struct ValidationError: Codable {
+    let field: String
+    let message: String
+    let value: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case field, message, value
     }
 }

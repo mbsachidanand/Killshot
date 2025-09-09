@@ -5,6 +5,7 @@
 
 const GroupServiceDB = require('../services/GroupServiceDB');
 const { validationResult } = require('express-validator');
+const { invalidateCache } = require('../middleware/cache');
 
 class GroupController {
   constructor() {
@@ -88,7 +89,10 @@ class GroupController {
       }
 
       const groupData = req.body;
-      const newGroup = this.groupService.createGroup(groupData);
+      const newGroup = await this.groupService.createGroup(groupData);
+      
+      // Invalidate groups cache
+      invalidateCache('groups:');
       
       res.status(201).json({
         success: true,
