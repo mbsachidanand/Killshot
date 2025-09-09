@@ -14,6 +14,8 @@ import UIKit
 struct ContentView: View {
     @StateObject private var groupService = GroupService()
     @State private var showingAddExpense = false
+    @State private var selectedGroupForDetails: Group?
+    @State private var showExpenseAddedMessage = false
     
     // Current user information - in a real app, this would come from authentication
     private let currentUser = User(id: "1", name: "Rishab", email: "rishab@example.com")
@@ -36,19 +38,39 @@ struct ContentView: View {
         }
         #if os(iOS)
         .fullScreenCover(isPresented: $showingAddExpense) {
-            AddExpenseView(onExpenseAdded: {
+            AddExpenseView(onExpenseAdded: { group in
                 // Refresh groups when expense is added
                 groupService.refreshGroups()
+                
+                // Navigate to group details page if group is provided
+                if let group = group {
+                    selectedGroupForDetails = group
+                    showExpenseAddedMessage = true
+                }
             })
         }
         #else
         .sheet(isPresented: $showingAddExpense) {
-            AddExpenseView(onExpenseAdded: {
+            AddExpenseView(onExpenseAdded: { group in
                 // Refresh groups when expense is added
                 groupService.refreshGroups()
+                
+                // Navigate to group details page if group is provided
+                if let group = group {
+                    selectedGroupForDetails = group
+                    showExpenseAddedMessage = true
+                }
             })
         }
         #endif
+        .background(
+            NavigationLink(
+                destination: selectedGroupForDetails.map { GroupDetailView(group: $0) },
+                isActive: $showExpenseAddedMessage
+            ) {
+                EmptyView()
+            }
+        )
     }
     
     // MARK: - Main Content
@@ -259,6 +281,7 @@ struct ContentView: View {
 // Group detail view
 struct GroupDetailView: View {
     let group: Group
+    @State private var showSuccessMessage = true
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -287,6 +310,35 @@ struct GroupDetailView: View {
                 }
             }
             .padding(.horizontal)
+            
+            // Success message
+            if showSuccessMessage {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.title2)
+                    
+                    Text("Expense added successfully!")
+                        .font(.headline)
+                        .foregroundColor(.green)
+                        .fontWeight(.medium)
+                    
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 12)
+                .background(Color.green.opacity(0.1))
+                .cornerRadius(8)
+                .padding(.horizontal)
+                .onAppear {
+                    // Auto-hide the message after 3 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            showSuccessMessage = false
+                        }
+                    }
+                }
+            }
             
             Divider()
             
@@ -340,12 +392,12 @@ struct AddExpenseView: View {
     @State private var selectedGroup: Group?
     @State private var showingGroupPicker = false
     @State private var splitType = "Equally"
-    @State private var isExpenseCreated = false
-    @State private var showSuccessAlert = false
     
     @StateObject private var groupService = GroupService()
     @StateObject private var expenseService = ExpenseService()
     @Environment(\.dismiss) private var dismiss
+    
+    let onExpenseAdded: ((Group?) -> Void)?
     
     // Current user information - in a real app, this would come from authentication
     private let currentUser = User(id: "1", name: "Rishab", email: "rishab@example.com")
@@ -399,25 +451,16 @@ struct AddExpenseView: View {
         }?.id
     }
     
-    // Callback to refresh the main view
-    var onExpenseAdded: (() -> Void)?
-    
     var body: some View {
         VStack(spacing: 0) {
             // Navigation header
             HStack {
-                if !isExpenseCreated {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(.blue)
-                    .font(.title3)
-                    .fontWeight(.medium)
-                } else {
-                    // Empty space when success is shown
-                    Spacer()
-                        .frame(width: 60) // Same width as Cancel button
+                Button("Cancel") {
+                    dismiss()
                 }
+                .foregroundColor(.blue)
+                .font(.title3)
+                .fontWeight(.medium)
                 
                 Spacer()
                 
@@ -442,32 +485,6 @@ struct AddExpenseView: View {
             
             // Main content with light grey background
             VStack(spacing: 0) {
-                // Success overlay
-                if isExpenseCreated {
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
-                        
-                        Text("Added")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.green, Color.green.opacity(0.8)]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(15)
-                    .shadow(color: Color.green.opacity(0.3), radius: 4, x: 0, y: 2)
-                    .scaleEffect(1.0)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isExpenseCreated)
-                } else {
                 // Input fields section
                 VStack(spacing: 20) {
                     inputField(label: "Title", text: $title, placeholder: "Enter expense title")
@@ -495,7 +512,6 @@ struct AddExpenseView: View {
                 
                 // Add button
                 addButton
-                }
             }
             .onAppear {
                 groupService.loadGroups()
@@ -789,21 +805,15 @@ struct AddExpenseView: View {
                     description: nil
                 ) { [weak groupService] success in
                     if success {
-                        // Mark as created and show success feedback
-                        isExpenseCreated = true
-                        showSuccessAlert = true
-                        
                         // Refresh groups with a delay to ensure database transaction is fully committed
                         print("🔄 Expense created successfully, refreshing groups...")
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                             groupService?.refreshGroups()
                         }
                         
-                        // Also call the main view refresh callback
-                        onExpenseAdded?()
-                        
-                        // Auto-dismiss after 2 seconds
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        // Pass the selected group to the parent view and dismiss
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            onExpenseAdded?(group)
                             dismiss()
                         }
                     }
@@ -819,7 +829,7 @@ struct AddExpenseView: View {
                         .scaleEffect(0.8)
                 }
                 
-                Text(expenseService.isLoading ? "Adding..." : (isExpenseCreated ? "Added!" : "Add"))
+                Text(expenseService.isLoading ? "Adding..." : "Add")
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
@@ -827,7 +837,6 @@ struct AddExpenseView: View {
             .frame(maxWidth: .infinity)
             .frame(height: 50)
             .background(
-                isExpenseCreated ? Color.green : 
                 (isFormValid && !expenseService.isLoading ? Color.blue : Color.gray)
             )
             .cornerRadius(12)
@@ -835,11 +844,6 @@ struct AddExpenseView: View {
         .disabled(!isFormValid || expenseService.isLoading)
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
-        .alert("Expense Added!", isPresented: $showSuccessAlert) {
-            Button("OK") {
-                dismiss()
-            }
-        }
         .alert("Error", isPresented: .constant(expenseService.error != nil)) {
             Button("OK") {
                 expenseService.clearError()
