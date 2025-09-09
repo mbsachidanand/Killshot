@@ -19,7 +19,7 @@ struct User: Codable, Identifiable, Equatable {
 }
 
 // MARK: - Group Model
-struct Group: Codable, Identifiable, Equatable {
+struct Group: Codable, Identifiable, Equatable, Hashable {
     let id: String
     let name: String
     let description: String
@@ -46,7 +46,7 @@ struct Group: Codable, Identifiable, Equatable {
 }
 
 // MARK: - Group Detail Model
-struct GroupDetail: Codable, Identifiable, Equatable {
+struct GroupDetail: Codable, Identifiable, Equatable, Hashable {
     let id: String
     let name: String
     let description: String
@@ -61,7 +61,7 @@ struct GroupDetail: Codable, Identifiable, Equatable {
 }
 
 // MARK: - Group Member Model
-struct GroupMember: Codable, Identifiable, Equatable {
+struct GroupMember: Codable, Identifiable, Equatable, Hashable {
     let id: String
     let name: String
     let email: String
@@ -73,7 +73,7 @@ struct GroupMember: Codable, Identifiable, Equatable {
 }
 
 // MARK: - Expense Model
-struct Expense: Codable, Identifiable, Equatable {
+struct Expense: Codable, Identifiable, Equatable, Hashable {
     let id: String
     let title: String
     let amount: Double
@@ -92,7 +92,7 @@ struct Expense: Codable, Identifiable, Equatable {
 }
 
 // MARK: - Split Detail Model
-struct SplitDetail: Codable, Identifiable, Equatable {
+struct SplitDetail: Codable, Identifiable, Equatable, Hashable {
     let userId: String
     let userName: String
     let amount: Double

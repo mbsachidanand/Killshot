@@ -15,7 +15,6 @@ struct ContentView: View {
     @StateObject private var groupService = GroupService()
     @State private var showingAddExpense = false
     @State private var selectedGroupForDetails: Group?
-    @State private var showExpenseAddedMessage = false
     @State private var showSuccessAlert = false
     
     // Current user information - in a real app, this would come from authentication
@@ -40,14 +39,17 @@ struct ContentView: View {
         #if os(iOS)
         .fullScreenCover(isPresented: $showingAddExpense) {
             AddExpenseView(onExpenseAdded: { group in
+                print("🔄 ContentView: Received group from AddExpenseView: \(group?.name ?? "nil")")
                 // Refresh groups when expense is added
                 groupService.refreshGroups()
                 
                 // Navigate to group details page if group is provided
                 if let group = group {
+                    print("🔄 ContentView: Setting up navigation to group: \(group.name)")
                     selectedGroupForDetails = group
-                    showExpenseAddedMessage = true
                     showSuccessAlert = true
+                } else {
+                    print("🔄 ContentView: No group provided, not navigating")
                 }
             })
         }
@@ -60,22 +62,19 @@ struct ContentView: View {
                 // Navigate to group details page if group is provided
                 if let group = group {
                     selectedGroupForDetails = group
-                    showExpenseAddedMessage = true
                     showSuccessAlert = true
                 }
             })
         }
         #endif
-        .navigationDestination(isPresented: $showExpenseAddedMessage) {
-            if let group = selectedGroupForDetails {
-                GroupDetailView(group: group, showSuccessMessage: showSuccessAlert)
-                    .onAppear {
-                        // Reset the success alert flag after navigation
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            showSuccessAlert = false
-                        }
+        .navigationDestination(item: $selectedGroupForDetails) { group in
+            GroupDetailView(group: group, showSuccessMessage: showSuccessAlert)
+                .onAppear {
+                    // Reset the success alert flag after navigation
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        showSuccessAlert = false
                     }
-            }
+                }
         }
     }
     
@@ -802,6 +801,7 @@ struct AddExpenseView: View {
                         
                         // Pass the selected group to the parent view and dismiss
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            print("🔄 AddExpenseView: Calling onExpenseAdded with group: \(selectedGroup?.name ?? "nil")")
                             onExpenseAdded?(selectedGroup)
                             dismiss()
                         }
