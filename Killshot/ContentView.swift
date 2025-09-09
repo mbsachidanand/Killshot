@@ -479,6 +479,8 @@ struct AddExpenseView: View {
                 groupService.loadGroups()
                 // Set the paid by field to current user
                 paidBy = "\(currentUser.name) (me)"
+                // Debug: Print available members
+                print("Available members: \(memberDisplayOptions)")
             }
         }
         .background(Color.gray.opacity(0.05))
@@ -541,21 +543,31 @@ struct AddExpenseView: View {
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
             
-            HStack {
-                Text(value.wrappedValue)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.primary)
+            Menu {
+                ForEach(options, id: \.self) { option in
+                    Button(action: {
+                        value.wrappedValue = option
+                    }) {
+                        Text(option)
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(value.wrappedValue)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.primary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+                .background(Color.white)
+                .cornerRadius(12)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .background(Color.white)
-            .cornerRadius(12)
         }
     }
     
