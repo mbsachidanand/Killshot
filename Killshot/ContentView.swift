@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var showingAddExpense = false
     @State private var selectedGroupForDetails: Group?
     @State private var showExpenseAddedMessage = false
+    @State private var showSuccessAlert = false
     
     // Current user information - in a real app, this would come from authentication
     private let currentUser = User(id: "1", name: "Rishab", email: "rishab@example.com")
@@ -46,6 +47,7 @@ struct ContentView: View {
                 if let group = group {
                     selectedGroupForDetails = group
                     showExpenseAddedMessage = true
+                    showSuccessAlert = true
                 }
             })
         }
@@ -59,13 +61,20 @@ struct ContentView: View {
                 if let group = group {
                     selectedGroupForDetails = group
                     showExpenseAddedMessage = true
+                    showSuccessAlert = true
                 }
             })
         }
         #endif
         .navigationDestination(isPresented: $showExpenseAddedMessage) {
             if let group = selectedGroupForDetails {
-                GroupDetailView(group: group)
+                GroupDetailView(group: group, showSuccessMessage: showSuccessAlert)
+                    .onAppear {
+                        // Reset the success alert flag after navigation
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            showSuccessAlert = false
+                        }
+                    }
             }
         }
     }
@@ -151,7 +160,7 @@ struct ContentView: View {
     
     // MARK: - Group Row
     private func groupRow(for group: Group, at index: Int) -> some View {
-        NavigationLink(destination: GroupDetailView(group: group)) {
+        NavigationLink(destination: GroupDetailView(group: group, showSuccessMessage: false)) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(group.name)
@@ -278,7 +287,8 @@ struct ContentView: View {
 // Group detail view
 struct GroupDetailView: View {
     let group: Group
-    @State private var showSuccessMessage = true
+    let showSuccessMessage: Bool
+    @State private var showAlert = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -307,35 +317,6 @@ struct GroupDetailView: View {
                 }
             }
             .padding(.horizontal)
-            
-            // Success message
-            if showSuccessMessage {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                        .font(.title2)
-                    
-                    Text("Expense added successfully!")
-                        .font(.headline)
-                        .foregroundColor(.green)
-                        .fontWeight(.medium)
-                    
-                    Spacer()
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 12)
-                .background(Color.green.opacity(0.1))
-                .cornerRadius(8)
-                .padding(.horizontal)
-                .onAppear {
-                    // Auto-hide the message after 3 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                        withAnimation(.easeOut(duration: 0.5)) {
-                            showSuccessMessage = false
-                        }
-                    }
-                }
-            }
             
             Divider()
             
@@ -377,6 +358,17 @@ struct GroupDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .alert("Expense Added!", isPresented: $showAlert) {
+            Button("OK") { }
+        } message: {
+            Text("Your expense has been successfully added to this group.")
+        }
+        .onAppear {
+            // Show alert if this view was navigated to after adding an expense
+            if showSuccessMessage {
+                showAlert = true
+            }
+        }
     }
 }
 
