@@ -692,9 +692,11 @@ struct AddExpenseView: View {
                         isExpenseCreated = true
                         showSuccessAlert = true
                         
-                        // Refresh groups immediately to show updated data
+                        // Refresh groups with a small delay to ensure database transaction is committed
                         print("🔄 Expense created successfully, refreshing groups...")
-                        groupService?.refreshGroups()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            groupService?.refreshGroupsWithRetry()
+                        }
                         
                         // Also call the main view refresh callback
                         onExpenseAdded?()

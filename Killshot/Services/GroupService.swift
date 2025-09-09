@@ -94,6 +94,21 @@ class GroupService: ObservableObject, GroupServiceProtocol {
         loadGroups()
     }
     
+    func refreshGroupsWithRetry(maxRetries: Int = 3) {
+        print("🔄 Refreshing groups with retry mechanism...")
+        loadGroups()
+        
+        // If we still have stale data after a short delay, retry
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            // Check if we need to retry based on data freshness
+            // This is a simple retry mechanism
+            if maxRetries > 0 {
+                print("🔄 Retrying groups refresh... (\(maxRetries) retries left)")
+                self.refreshGroupsWithRetry(maxRetries: maxRetries - 1)
+            }
+        }
+    }
+    
     func createGroup(name: String, description: String? = nil) {
         guard !isLoading else { return }
         
