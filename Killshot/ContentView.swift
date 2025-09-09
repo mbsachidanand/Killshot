@@ -16,14 +16,14 @@ struct ContentView: View {
     @State private var showingAddExpense = false
     @State private var refreshID = UUID()
     
-    // Current user ID - in a real app, this would come from authentication
-    private let currentUserId = "1" // Rishab's user ID
+    // Current user information - in a real app, this would come from authentication
+    private let currentUser = User(id: "1", name: "Rishab", email: "rishab@example.com")
     
     // Filter groups to show only those where current user is a member
     private var userGroups: [Group] {
         return groupService.groups.filter { group in
             group.members.contains { member in
-                member.id == currentUserId
+                member.id == currentUser.id
             }
         }
     }
@@ -335,7 +335,7 @@ struct GroupDetailView: View {
 struct AddExpenseView: View {
     @State private var title = ""
     @State private var amount = ""
-    @State private var paidBy = "Rishab (me)"
+    @State private var paidBy = "Rishab (me)" // Will be updated in onAppear
     @State private var when = Date()
     @State private var selectedGroup: Group?
     @State private var showingGroupPicker = false
@@ -347,14 +347,14 @@ struct AddExpenseView: View {
     @StateObject private var expenseService = ExpenseService()
     @Environment(\.dismiss) private var dismiss
     
-    // Current user ID - in a real app, this would come from authentication
-    private let currentUserId = "1" // Rishab's user ID
+    // Current user information - in a real app, this would come from authentication
+    private let currentUser = User(id: "1", name: "Rishab", email: "rishab@example.com")
     
     // Filter groups to show only those where current user is a member
     private var userGroups: [Group] {
         return groupService.groups.filter { group in
             group.members.contains { member in
-                member.id == currentUserId
+                member.id == currentUser.id
             }
         }
     }
@@ -425,7 +425,7 @@ struct AddExpenseView: View {
                     
                     // Paid by and When side by side
                     HStack(spacing: 16) {
-                        dropdownField(label: "Paid by", value: $paidBy, options: ["Rishab (me)", "Person 2", "Person 3", "Person 4"])
+                        dropdownField(label: "Paid by", value: $paidBy, options: ["\(currentUser.name) (me)", "Person 2", "Person 3", "Person 4"])
                         
                         datePickerField
                     }
@@ -448,6 +448,8 @@ struct AddExpenseView: View {
             }
             .onAppear {
                 groupService.loadGroups()
+                // Set the paid by field to current user
+                paidBy = "\(currentUser.name) (me)"
             }
         }
         .background(Color.gray.opacity(0.05))
@@ -711,7 +713,7 @@ struct AddExpenseView: View {
                 expenseService.createExpense(
                     title: title,
                     amount: amountValue,
-                    paidBy: "1", // For now, hardcode to user ID "1" (Rishab)
+                    paidBy: currentUser.id, // Current user's ID
                     groupId: group.id,
                     splitType: "equal",
                     date: dateString,

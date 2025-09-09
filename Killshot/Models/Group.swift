@@ -7,6 +7,17 @@
 
 import Foundation
 
+// MARK: - User Model
+struct User: Codable, Identifiable, Equatable {
+    let id: String
+    let name: String
+    let email: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, email
+    }
+}
+
 // MARK: - Group Model
 struct Group: Codable, Identifiable, Equatable {
     let id: String
