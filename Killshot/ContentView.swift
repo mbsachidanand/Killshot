@@ -363,12 +363,18 @@ struct AddExpenseView: View {
         VStack(spacing: 0) {
             // Navigation header
             HStack {
-                Button("Cancel") {
-                    dismiss()
+                if !isExpenseCreated {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundColor(.blue)
+                    .font(.title3)
+                    .fontWeight(.medium)
+                } else {
+                    // Empty space when success is shown
+                    Spacer()
+                        .frame(width: 60) // Same width as Cancel button
                 }
-                .foregroundColor(.blue)
-                .font(.title3)
-                .fontWeight(.medium)
                 
                 Spacer()
                 
@@ -395,17 +401,17 @@ struct AddExpenseView: View {
             VStack(spacing: 0) {
                 // Success overlay
                 if isExpenseCreated {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 4) {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 30))
+                            .font(.system(size: 24))
                             .foregroundColor(.green)
                         
-                        Text("Expense Added!")
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                        Text("Added!")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
                             .foregroundColor(.green)
                     }
-                    .padding(.vertical, 20)
+                    .padding(.vertical, 12)
                     .frame(maxWidth: .infinity)
                     .background(Color.green.opacity(0.1))
                 } else {
