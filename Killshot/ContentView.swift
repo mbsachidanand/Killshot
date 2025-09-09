@@ -100,7 +100,11 @@ struct ContentView: View {
                 ForEach(Array(groupService.groups.enumerated()), id: \.element.id) { index, group in
                     groupRow(for: group, at: index)
                         .onAppear {
-                            print("🔄 UI: Rendering group \(group.name) with total \(group.totalExpensesDouble)")
+                            print("🔄 UI: Rendering group \(group.name)")
+                            print("   - Backend totalExpenses: \(group.totalExpenses)")
+                            print("   - Calculated totalExpensesDouble: \(group.totalExpensesDouble)")
+                            print("   - Expenses count: \(group.expenses.count)")
+                            print("   - Expenses total: \(group.expenses.reduce(0) { $0 + $1.amount })")
                         }
                 }
             }
@@ -110,6 +114,12 @@ struct ContentView: View {
         .id(groupService.refreshTrigger)
         .onChange(of: groupService.groups) {
             // Force UI refresh when groups change
+            print("🔄 Groups array changed, forcing UI refresh")
+            refreshID = UUID()
+        }
+        .onChange(of: groupService.refreshTrigger) {
+            // Force UI refresh when refresh trigger changes
+            print("🔄 Refresh trigger changed, forcing UI refresh")
             refreshID = UUID()
         }
     }
@@ -683,7 +693,13 @@ struct AddExpenseView: View {
                         showSuccessAlert = true
                         
                         // Refresh groups immediately to show updated data
+                        print("🔄 Expense created successfully, refreshing groups...")
                         groupService?.refreshGroups()
+                        
+                        // Force immediate UI refresh
+                        DispatchQueue.main.async {
+                            self.refreshID = UUID()
+                        }
                         
                         // Also call the main view refresh callback
                         onExpenseAdded?()

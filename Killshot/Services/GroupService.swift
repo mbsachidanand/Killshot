@@ -63,7 +63,11 @@ class GroupService: ObservableObject, GroupServiceProtocol {
                 receiveValue: { [weak self] groups in
                     print("🔄 Received \(groups.count) groups from API")
                     for group in groups {
-                        print("📊 API Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
+                        print("📊 API Group: \(group.name)")
+                        print("   - Backend totalExpenses: \(group.totalExpenses)")
+                        print("   - Calculated totalExpensesDouble: \(group.totalExpensesDouble)")
+                        print("   - Expenses count: \(group.expenses.count)")
+                        print("   - Expenses total: \(group.expenses.reduce(0) { $0 + $1.amount })")
                     }
                     
                     // Update groups immediately on main thread

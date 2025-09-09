@@ -25,7 +25,8 @@ struct Group: Codable, Identifiable, Equatable {
     }
     
     var totalExpensesDouble: Double {
-        return expenses.reduce(0) { $0 + $1.amount }
+        // Use the backend-calculated totalExpenses field for accuracy
+        return Double(totalExpenses) ?? 0.0
     }
     
     enum CodingKeys: String, CodingKey {
