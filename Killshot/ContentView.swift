@@ -359,6 +359,35 @@ struct AddExpenseView: View {
         }
     }
     
+    // Get all unique members from user's groups for "Paid by" selection
+    private var availableMembers: [GroupMember] {
+        let allMembers = userGroups.flatMap { $0.members }
+        let uniqueMembers = Dictionary(grouping: allMembers, by: { $0.id })
+            .compactMap { $0.value.first }
+        return uniqueMembers.sorted { $0.name < $1.name }
+    }
+    
+    // Convert members to display strings for dropdown
+    private var memberDisplayOptions: [String] {
+        return availableMembers.map { member in
+            if member.id == currentUser.id {
+                return "\(member.name) (me)"
+            } else {
+                return member.name
+            }
+        }
+    }
+    
+    // Get member ID from display name
+    private func getMemberId(from displayName: String) -> String? {
+        if displayName == "\(currentUser.name) (me)" {
+            return currentUser.id
+        }
+        return availableMembers.first { member in
+            member.name == displayName
+        }?.id
+    }
+    
     // Callback to refresh the main view
     var onExpenseAdded: (() -> Void)?
     
@@ -425,7 +454,7 @@ struct AddExpenseView: View {
                     
                     // Paid by and When side by side
                     HStack(spacing: 16) {
-                        dropdownField(label: "Paid by", value: $paidBy, options: ["\(currentUser.name) (me)", "Person 2", "Person 3", "Person 4"])
+                        dropdownField(label: "Paid by", value: $paidBy, options: memberDisplayOptions)
                         
                         datePickerField
                     }
@@ -709,11 +738,17 @@ struct AddExpenseView: View {
                 let formatter = ISO8601DateFormatter()
                 let dateString = formatter.string(from: when)
                 
+                // Get the selected member ID
+                guard let selectedMemberId = getMemberId(from: paidBy) else {
+                    print("Error: Could not find member ID for selected payer")
+                    return
+                }
+                
                 // Create expense
                 expenseService.createExpense(
                     title: title,
                     amount: amountValue,
-                    paidBy: currentUser.id, // Current user's ID
+                    paidBy: selectedMemberId, // Selected member's ID
                     groupId: group.id,
                     splitType: "equal",
                     date: dateString,
