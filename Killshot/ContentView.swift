@@ -378,7 +378,7 @@ struct AddExpenseView: View {
                 
                 Spacer()
                 
-                Text(isExpenseCreated ? "Expense added" : "Add expense")
+                Text("Add expense")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
@@ -401,14 +401,20 @@ struct AddExpenseView: View {
             VStack(spacing: 0) {
                 // Success overlay
                 if isExpenseCreated {
-                    VStack(spacing: 4) {
+                    HStack {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 24))
+                            .font(.system(size: 20))
+                            .foregroundColor(.green)
+                        
+                        Text("Expense added")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
                             .foregroundColor(.green)
                     }
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
                     .background(Color.green.opacity(0.1))
+                    .cornerRadius(20)
                 } else {
                 // Input fields section
                 VStack(spacing: 20) {
