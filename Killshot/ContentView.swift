@@ -363,7 +363,7 @@ struct AddExpenseView: View {
         VStack(spacing: 0) {
             // Navigation header
             HStack {
-                Button(isExpenseCreated ? "Done" : "Cancel") {
+                Button("Cancel") {
                     dismiss()
                 }
                 .foregroundColor(.blue)
@@ -395,22 +395,17 @@ struct AddExpenseView: View {
             VStack(spacing: 0) {
                 // Success overlay
                 if isExpenseCreated {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 50))
+                            .font(.system(size: 30))
                             .foregroundColor(.green)
                         
-                        Text("Expense Added Successfully!")
-                            .font(.title2)
+                        Text("Expense Added!")
+                            .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.green)
-                        
-                        Text("Your expense has been added to \(selectedGroup?.name ?? "the group")")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
                     }
-                    .padding(.vertical, 40)
+                    .padding(.vertical, 20)
                     .frame(maxWidth: .infinity)
                     .background(Color.green.opacity(0.1))
                 } else {
