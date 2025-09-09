@@ -785,8 +785,6 @@ struct AddExpenseView: View {
             Button("OK") {
                 dismiss()
             }
-        } message: {
-            Text("Your expense has been successfully added to \(selectedGroup?.name ?? "the group").")
         }
         .alert("Error", isPresented: .constant(expenseService.error != nil)) {
             Button("OK") {
