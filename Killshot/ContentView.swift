@@ -30,7 +30,7 @@ struct ContentView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             mainContent
                 .onAppear {
                     groupService.loadGroups()
@@ -63,14 +63,11 @@ struct ContentView: View {
             })
         }
         #endif
-        .background(
-            NavigationLink(
-                destination: selectedGroupForDetails.map { GroupDetailView(group: $0) },
-                isActive: $showExpenseAddedMessage
-            ) {
-                EmptyView()
+        .navigationDestination(isPresented: $showExpenseAddedMessage) {
+            if let group = selectedGroupForDetails {
+                GroupDetailView(group: group)
             }
-        )
+        }
     }
     
     // MARK: - Main Content
