@@ -6,15 +6,16 @@
 //
 
 import Foundation
+import UIKit
 
 /**
- * Environment - Manages environment-specific configuration
+ * AppEnvironment - Manages environment-specific configuration
  *
  * This enum provides a centralized way to manage different environments
  * (development, staging, production) and their respective configurations.
  * It replaces hardcoded values with environment-aware configuration.
  */
-enum Environment {
+enum AppEnvironment {
     case development
     case staging
     case production
@@ -23,7 +24,7 @@ enum Environment {
      * Current environment based on build configuration
      * In a real app, this would be determined by build schemes or Info.plist
      */
-    static var current: Environment {
+    static var current: AppEnvironment {
         #if DEBUG
         return .development
         #elseif STAGING
@@ -155,8 +156,8 @@ struct EnvironmentConfig {
     private init() {}
 
     /// Current environment
-    var environment: Environment {
-        return Environment.current
+    var environment: AppEnvironment {
+        return AppEnvironment.current
     }
 
     /// API base URL for current environment
