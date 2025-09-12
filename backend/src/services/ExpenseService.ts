@@ -363,7 +363,12 @@ export class ExpenseService implements Service<Expense, CreateExpenseRequest, Up
    */
   async getGroupExpenseStats(groupId: string): Promise<ExpenseStats> {
     try {
-      const groupExpenses = await this.getExpensesByGroup(groupId);
+      // Get the actual ExpenseModel instances, not the JSON objects
+      const allExpenses = Array.from(this.expenses.values());
+      const groupExpenseModels = allExpenses.filter(expense => expense.groupId === groupId);
+
+      // Convert to JSON for calculations
+      const groupExpenses = groupExpenseModels.map(expense => expense.toJSON());
 
       const totalAmount = groupExpenses.reduce((sum, expense) => sum + expense.amount, 0);
       const expenseCount = groupExpenses.length;
@@ -386,7 +391,7 @@ export class ExpenseService implements Service<Expense, CreateExpenseRequest, Up
         totalAmount,
         expenseCount,
         balances: Object.fromEntries(balances),
-        expenses: groupExpenses.map(expense => expense.getSummary())
+        expenses: groupExpenseModels.map(expense => expense.getSummary())
       };
     } catch (error) {
       throw new Error(`Failed to get group expense stats: ${(error as Error).message}`);

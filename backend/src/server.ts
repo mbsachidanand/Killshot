@@ -192,7 +192,7 @@ class App {
    */
   private async initializeDatabase(): Promise<void> {
     try {
-      const db = DatabaseFactory.createDatabase();
+      const db = DatabaseFactory.getInstance().getDefaultAdapter();
       await db.connect();
       console.log('✅ Database connected successfully');
     } catch (error) {
@@ -211,7 +211,7 @@ class App {
       console.log('🔄 Shutting down server gracefully...');
 
       // Close database connections
-      const db = DatabaseFactory.createDatabase();
+      const db = DatabaseFactory.getInstance().getDefaultAdapter();
       await db.disconnect();
       console.log('✅ Database disconnected');
 
