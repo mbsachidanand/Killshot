@@ -27,7 +27,13 @@ export class ExpenseController {
   private expenseService: ExpenseService;
 
   constructor() {
-    this.expenseService = new ExpenseService();
+    try {
+      this.expenseService = new ExpenseService();
+      console.log('ExpenseController initialized successfully');
+    } catch (error) {
+      console.error('Error initializing ExpenseController:', error);
+      throw error;
+    }
   }
 
   /**
@@ -73,6 +79,12 @@ export class ExpenseController {
       // Get all expenses
       else {
         expenses = await this.expenseService.findAll();
+      }
+
+      // Ensure expenses is an array
+      if (!Array.isArray(expenses)) {
+        console.error('Expenses is not an array:', typeof expenses, expenses);
+        expenses = [];
       }
 
       // Simple pagination

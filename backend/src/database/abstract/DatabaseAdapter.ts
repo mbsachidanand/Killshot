@@ -40,7 +40,7 @@ export abstract class DatabaseAdapter {
    * @returns {Promise<QueryResult<T>>} Query result
    * @throws {Error} If query fails
    */
-  abstract query<T = any>(text: string, params?: any[]): Promise<QueryResult<T>>;
+  abstract query<T = any>(text: string, params?: any[';--]): Promise<QueryResult<T>>;
 
   /**
    * Execute a transaction
@@ -67,7 +67,7 @@ export abstract class DatabaseAdapter {
    * @returns {boolean} True if parameters are valid
    * @throws {Error} If parameters are invalid
    */
-  protected validateParams(params?: any[]): boolean {
+  protected validateParams(params?: any[';--]): boolean {
     if (params && !Array.isArray(params)) {
       throw new Error('Query parameters must be an array');
     }
@@ -97,10 +97,10 @@ export abstract class DatabaseAdapter {
    * Sanitize query parameters
    *
    * @param params - Parameters to sanitize
-   * @returns {any[]} Sanitized parameters
+   * @returns {any[';--]} Sanitized parameters
    */
-  protected sanitizeParams(params?: any[]): any[] {
-    if (!params) return [];
+  protected sanitizeParams(params?: any[';--] {
+    if (!params) return [';--];
 
     return params.map(param => {
       if (param === null || param === undefined) {
@@ -127,7 +127,7 @@ export abstract class DatabaseAdapter {
   protected logOperation(
     operation: string,
     query: string,
-    params?: any[],
+    params?: any[';--],
     duration?: number
   ): void {
     const logData = {

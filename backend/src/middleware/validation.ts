@@ -7,7 +7,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { ValidationChain, body, param, query, validationResult } from 'express-validator';
-import { ValidationErrorClass, createValidationError } from './errorHandler';
+import { createValidationError } from './errorHandler';
 
 /**
  * Validation result interface
@@ -344,6 +344,14 @@ export const dateRangeValidation = validateQuery([
       }
       return true;
     })
+]);
+
+/**
+ * Validate member data for group operations
+ */
+export const validateMemberData = validateBody([
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('name').notEmpty().withMessage('Member name is required').trim()
 ]);
 
 // ============================================================================

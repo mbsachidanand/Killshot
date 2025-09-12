@@ -63,9 +63,16 @@ export class ExpenseService implements Service<Expense, CreateExpenseRequest, Up
   private expenses: Map<string, ExpenseModel>;
 
   constructor() {
-    // In-memory storage for expenses
-    this.expenses = new Map();
-    this.initializeSampleData();
+    try {
+      // In-memory storage for expenses
+      this.expenses = new Map();
+      console.log('ExpenseService constructor: Map created');
+      this.initializeSampleData();
+      console.log('ExpenseService constructor: Sample data initialized, expenses size:', this.expenses.size);
+    } catch (error) {
+      console.error('Error in ExpenseService constructor:', error);
+      throw error;
+    }
   }
 
   /**
@@ -142,8 +149,12 @@ export class ExpenseService implements Service<Expense, CreateExpenseRequest, Up
     ];
 
     sampleExpenses.forEach(expenseData => {
-      const expense = new ExpenseModel(expenseData);
-      this.expenses.set(expense.id, expense);
+      try {
+        const expense = new ExpenseModel(expenseData);
+        this.expenses.set(expense.id, expense);
+      } catch (error) {
+        console.error('Error creating sample expense:', error, expenseData);
+      }
     });
   }
 
@@ -186,7 +197,10 @@ export class ExpenseService implements Service<Expense, CreateExpenseRequest, Up
    * @returns {Promise<Expense[]>} Array of all expenses
    */
   async findAll(): Promise<Expense[]> {
-    return Array.from(this.expenses.values()).map(expense => expense.toJSON());
+    console.log('ExpenseService.findAll called, expenses size:', this.expenses.size);
+    const expensesArray = Array.from(this.expenses.values());
+    console.log('Expenses array length:', expensesArray.length);
+    return expensesArray.map(expense => expense.toJSON());
   }
 
   /**
