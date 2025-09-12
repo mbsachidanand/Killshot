@@ -306,9 +306,9 @@ export interface RequestWithId extends Express.Request {
  */
 export type ErrorHandler = (
   err: Error,
-  req: Express.Request,
-  res: Express.Response,
-  next: Express.NextFunction
+  req: any,
+  res: any,
+  next: any
 ) => void;
 
 // ============================================================================

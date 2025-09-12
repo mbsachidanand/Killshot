@@ -355,18 +355,18 @@ export class Expense implements ExpenseType, DatabaseEntity {
     }
 
     return new Expense({
-      id: data.id || undefined,
+      id: data.id,
       title: data.title,
       amount: data.amount,
       paidBy: data.paidBy,
       groupId: data.groupId,
       splitType: data.splitType || 'equal',
       splits: data.splits || [],
-      date: data.date || undefined,
-      description: data.description || undefined,
-      createdAt: data.createdAt || undefined,
-      updatedAt: data.updatedAt || undefined
-    });
+      date: data.date,
+      description: data.description,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt
+    } as any);
   }
 
   /**

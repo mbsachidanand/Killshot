@@ -261,7 +261,8 @@ export class Group implements GroupType, DatabaseEntity {
       data.id,
       data.name,
       data.description || '',
-      data.createdAt ? new Date(data.createdAt) : new Date(),
+      data.createdBy || 'system',
+      data.createdAt ? new Date(data.createdAt as any) : new Date(),
       data.updatedAt ? new Date(data.updatedAt) : new Date()
     );
 

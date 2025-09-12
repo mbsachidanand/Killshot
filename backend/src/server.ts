@@ -54,7 +54,7 @@ class App {
    */
   private initializeMiddleware(): void {
     // Request ID middleware (should be first)
-    this.app.use(requestIdMiddleware);
+    this.app.use(requestIdMiddleware as any);
 
     // Security middleware
     this.app.use(helmet());

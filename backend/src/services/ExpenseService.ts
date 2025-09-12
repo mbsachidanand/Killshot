@@ -173,7 +173,7 @@ export class ExpenseService implements Service<Expense, CreateExpenseRequest, Up
         throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
       }
 
-      const expense = new ExpenseModel(expenseData);
+      const expense = new ExpenseModel(expenseData as any);
       this.expenses.set(expense.id, expense);
       return expense.toJSON();
     } catch (error) {
@@ -261,7 +261,7 @@ export class ExpenseService implements Service<Expense, CreateExpenseRequest, Up
         throw new Error(`Expense with ID ${expenseId} not found`);
       }
 
-      expense.update(updateData);
+      expense.update(updateData as any);
       return expense.toJSON();
     } catch (error) {
       throw new Error(`Failed to update expense: ${(error as Error).message}`);

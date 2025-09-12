@@ -200,7 +200,7 @@ export class PostgreSQLAdapter extends DatabaseAdapter {
 
     const startTime = Date.now();
     try {
-      const result: PGQueryResult<T> = await this.pool.query(text, sanitizedParams);
+      const result: PGQueryResult<any> = await this.pool.query(text, sanitizedParams);
       const duration = Date.now() - startTime;
 
       this.logOperation('query', text, sanitizedParams, duration);
