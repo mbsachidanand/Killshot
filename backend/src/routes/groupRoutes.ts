@@ -5,15 +5,15 @@
  * @fileoverview TypeScript implementation of group routes with full type safety
  */
 
-import { GroupController } from '@/controllers/GroupController';
+import { Router } from 'express';
+import { GroupController } from '../controllers/GroupController';
 import {
     createGroupValidation,
     groupIdValidation,
     searchValidation,
     updateGroupValidation,
     validateMemberData
-} from '@/middleware/validation';
-import { Router } from 'express';
+} from '../middleware/validation';
 
 /**
  * Group Routes Router

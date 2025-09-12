@@ -5,9 +5,9 @@
  * @fileoverview TypeScript implementation of validation middleware
  */
 
-import { ValidationError } from '@/types';
 import { NextFunction, Request, Response } from 'express';
 import { ValidationChain, body, param, query, validationResult } from 'express-validator';
+import { ValidationError } from '../types';
 import { createValidationError } from './errorHandler';
 
 /**
@@ -175,8 +175,14 @@ export const createExpenseValidation = validateBody([
     .withMessage('Description must be less than 1000 characters'),
 
   body('paidBy')
-    .isUUID()
+    .isString()
+    .isLength({ min: 1, max: 50 })
     .withMessage('Paid by must be a valid user ID'),
+
+  body('groupId')
+    .isString()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Group ID is required'),
 
   body('splitType')
     .isIn(['equal', 'exact', 'percentage'])
@@ -190,7 +196,11 @@ export const createExpenseValidation = validateBody([
       const now = new Date();
       const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
 
-      if (expenseDate > now) {
+      // Allow today's date by setting time to start of day for comparison
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const expenseDateOnly = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate());
+
+      if (expenseDateOnly > today) {
         throw new Error('Expense date cannot be in the future');
       }
 
@@ -251,7 +261,8 @@ export const updateExpenseValidation = validateBody([
 
   body('paidBy')
     .optional()
-    .isUUID()
+    .isString()
+    .isLength({ min: 1, max: 50 })
     .withMessage('Paid by must be a valid user ID'),
 
   body('splitType')

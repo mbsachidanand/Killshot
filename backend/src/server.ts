@@ -13,15 +13,15 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 
 // Import routes
-import expenseRoutes from '@/routes/expenseRoutes';
-import groupRoutes from '@/routes/groupRoutes';
+import expenseRoutes from './routes/expenseRoutes';
+import groupRoutes from './routes/groupRoutes';
 
 // Import database
-import DatabaseFactory from '@/database/DatabaseFactory';
+import DatabaseFactory from './database/DatabaseFactory';
 
 // Import middleware
-import { errorHandler, notFound } from '@/middleware/errorHandler';
-import requestIdMiddleware from '@/middleware/requestId';
+import { errorHandler, notFound } from './middleware/errorHandler';
+import requestIdMiddleware from './middleware/requestId';
 
 // Load environment variables
 dotenv.config();

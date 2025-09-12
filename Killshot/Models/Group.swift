@@ -203,13 +203,31 @@ struct APIResponse<T: Codable>: Codable {
  */
 struct GroupsResponse: Codable {
     let success: Bool      // Whether the request was successful
-    let message: String    // Human-readable message
     let data: [Group]      // Array of groups
-    let count: Int?        // Number of groups returned
-    let error: String?     // Error message if any
+    let pagination: PaginationInfo  // Pagination information
+    let timestamp: String  // Response timestamp
+    let requestId: String  // Request ID for tracking
 
     enum CodingKeys: String, CodingKey {
-        case success, message, data, count, error
+        case success, data, pagination, timestamp, requestId
+    }
+}
+
+/**
+ * PaginationInfo - Pagination information for list responses
+ *
+ * This struct provides pagination details for API responses that return lists.
+ */
+struct PaginationInfo: Codable {
+    let page: Int          // Current page number
+    let limit: Int         // Number of items per page
+    let total: Int         // Total number of items
+    let totalPages: Int    // Total number of pages
+    let hasNext: Bool      // Whether there's a next page
+    let hasPrev: Bool      // Whether there's a previous page
+
+    enum CodingKeys: String, CodingKey {
+        case page, limit, total, totalPages, hasNext, hasPrev
     }
 }
 
@@ -221,11 +239,11 @@ struct GroupsResponse: Codable {
  */
 struct GroupResponse: Codable {
     let success: Bool        // Whether the request was successful
-    let message: String      // Human-readable message
     let data: GroupDetail    // Detailed group information
-    let error: String?       // Error message if any
+    let timestamp: String    // Response timestamp
+    let requestId: String    // Request ID for tracking
 
     enum CodingKeys: String, CodingKey {
-        case success, message, data, error
+        case success, data, timestamp, requestId
     }
 }

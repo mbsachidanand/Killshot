@@ -5,8 +5,9 @@
  * @fileoverview TypeScript implementation of the Expense controller with full type safety
  */
 
-import { asyncHandler, createNotFoundError, createValidationError } from '@/middleware/errorHandler';
-import { ExpenseService } from '@/services/ExpenseService';
+import { NextFunction, Request, Response } from 'express';
+import { asyncHandler, createNotFoundError, createValidationError } from '../middleware/errorHandler';
+import { ExpenseService } from '../services/ExpenseService';
 import {
     ApiResponse,
     CreateExpenseRequest,
@@ -15,8 +16,7 @@ import {
     ExpensesResponse,
     PaginationParams,
     UpdateExpenseRequest
-} from '@/types';
-import { NextFunction, Request, Response } from 'express';
+} from '../types';
 
 /**
  * Expense Controller Class

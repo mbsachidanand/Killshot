@@ -3,7 +3,7 @@
  * Populates the database with initial sample data
  */
 
-const databaseFactory = require('./DatabaseFactory');
+const { DatabaseFactory } = require('./DatabaseFactory');
 
 class DatabaseSeeder {
   constructor() {
@@ -66,7 +66,7 @@ class DatabaseSeeder {
       },
       {
         id: 'expense_2',
-        title: 'Gas for Road Trip',
+        title: 'Petrol for Road Trip',
         amount: 800.00,
         paid_by: '2',
         group_id: '1',
@@ -103,14 +103,14 @@ class DatabaseSeeder {
    */
   async clearData(db) {
     console.log('🧹 Clearing existing data...');
-    
+
     // Delete in reverse order due to foreign key constraints
     await db.query('DELETE FROM expense_splits');
     await db.query('DELETE FROM expenses');
     await db.query('DELETE FROM group_members');
     await db.query('DELETE FROM groups');
     await db.query('DELETE FROM members');
-    
+
     console.log('✅ Existing data cleared');
   }
 
@@ -119,11 +119,14 @@ class DatabaseSeeder {
    */
   async seedMembers(db) {
     console.log('👥 Seeding members...');
-    
+
     for (const member of this.sampleMembers) {
-      await db.insert('members', member);
+      await db.query(
+        'INSERT INTO members (id, name, email) VALUES ($1, $2, $3)',
+        [member.id, member.name, member.email]
+      );
     }
-    
+
     console.log(`✅ Seeded ${this.sampleMembers.length} members`);
   }
 
@@ -132,20 +135,23 @@ class DatabaseSeeder {
    */
   async seedGroups(db) {
     console.log('👥 Seeding groups...');
-    
+
     for (const group of this.sampleGroups) {
       const { memberIds, ...groupData } = group;
-      await db.insert('groups', groupData);
-      
+      await db.query(
+        'INSERT INTO groups (id, name, description) VALUES ($1, $2, $3)',
+        [groupData.id, groupData.name, groupData.description]
+      );
+
       // Add group members
       for (const memberId of memberIds) {
-        await db.insert('group_members', {
-          group_id: group.id,
-          member_id: memberId
-        });
+        await db.query(
+          'INSERT INTO group_members (group_id, member_id) VALUES ($1, $2)',
+          [group.id, memberId]
+        );
       }
     }
-    
+
     console.log(`✅ Seeded ${this.sampleGroups.length} groups`);
   }
 
@@ -154,22 +160,23 @@ class DatabaseSeeder {
    */
   async seedExpenses(db) {
     console.log('💰 Seeding expenses...');
-    
+
     for (const expense of this.sampleExpenses) {
       const { splits, ...expenseData } = expense;
-      await db.insert('expenses', expenseData);
-      
+      await db.query(
+        'INSERT INTO expenses (id, title, amount, paid_by, group_id, split_type, date, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [expenseData.id, expenseData.title, expenseData.amount, expenseData.paid_by, expenseData.group_id, expenseData.split_type, expenseData.date, expenseData.description]
+      );
+
       // Add expense splits
       for (const split of splits) {
-        await db.insert('expense_splits', {
-          expense_id: expense.id,
-          member_id: split.memberId,
-          amount: split.amount,
-          percentage: split.percentage
-        });
+        await db.query(
+          'INSERT INTO expense_splits (expense_id, member_id, amount, percentage) VALUES ($1, $2, $3, $4)',
+          [expense.id, split.memberId, split.amount, split.percentage]
+        );
       }
     }
-    
+
     console.log(`✅ Seeded ${this.sampleExpenses.length} expenses`);
   }
 
@@ -178,25 +185,29 @@ class DatabaseSeeder {
    */
   async seed() {
     console.log('🌱 Starting database seeding...');
-    
+
     try {
-      const db = await databaseFactory.getAdapter();
-      
+      const factory = DatabaseFactory.getInstance();
+      const db = factory.getDefaultAdapter();
+      await db.connect();
+
       // Clear existing data
       await this.clearData(db);
-      
+
       // Seed data in order
       await this.seedMembers(db);
       await this.seedGroups(db);
       await this.seedExpenses(db);
-      
+
       console.log('🎉 Database seeding completed successfully!');
-      
+
     } catch (error) {
       console.error('❌ Database seeding failed:', error.message);
       process.exit(1);
     } finally {
-      await databaseFactory.disconnect();
+      const factory = DatabaseFactory.getInstance();
+      const db = factory.getDefaultAdapter();
+      await db.disconnect();
     }
   }
 }

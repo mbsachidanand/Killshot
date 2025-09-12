@@ -5,15 +5,14 @@
  * @fileoverview TypeScript implementation of expense routes with full type safety
  */
 
-import { ExpenseController } from '@/controllers/ExpenseController';
+import { Router } from 'express';
+import { ExpenseController } from '../controllers/ExpenseController';
 import {
-    createExpenseValidation,
     dateRangeValidation,
     expenseIdValidation,
     paginationValidation,
     updateExpenseValidation
-} from '@/middleware/validation';
-import { Router } from 'express';
+} from '../middleware/validation';
 
 /**
  * Expense Routes Router
@@ -94,7 +93,7 @@ router.get('/:id', expenseIdValidation, expenseController.getExpenseById);
  * @body    description - Expense description (optional)
  * @body    splits - Split details (optional)
  */
-router.post('/', createExpenseValidation, expenseController.createExpense);
+router.post('/', expenseController.createExpense);
 
 /**
  * @route   PUT /api/v1/expenses/:id
