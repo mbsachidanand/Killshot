@@ -29,40 +29,58 @@ struct ContentView: View {
         }
     }
     
+    
     var body: some View {
         NavigationStack {
             mainContent
                 .onAppear {
                     groupService.loadGroups()
                 }
+                .onChange(of: groupService.groups) { oldGroups, newGroups in
+                    print("🔄 ContentView: Groups updated, count: \(newGroups.count)")
+                }
         }
         #if os(iOS)
         .fullScreenCover(isPresented: $showingAddExpense) {
             AddExpenseView(onExpenseAdded: { group in
                 print("🔄 ContentView: Received group from AddExpenseView: \(group?.name ?? "nil")")
-                // Refresh groups when expense is added
-                groupService.refreshGroups()
                 
                 // Navigate to group details page if group is provided
                 if let group = group {
                     print("🔄 ContentView: Setting up navigation to group: \(group.name)")
+                    print("🔄 ContentView: Group ID: \(group.id)")
                     selectedGroupForDetails = group
                     showSuccessAlert = true
+                    print("🔄 ContentView: selectedGroupForDetails set to: \(group.name)")
+                    
+                    // Refresh groups after setting up navigation
+                    groupService.refreshGroups()
                 } else {
                     print("🔄 ContentView: No group provided, not navigating")
+                    // Still refresh groups even if no navigation
+                    groupService.refreshGroups()
                 }
             })
         }
         #else
         .sheet(isPresented: $showingAddExpense) {
             AddExpenseView(onExpenseAdded: { group in
-                // Refresh groups when expense is added
-                groupService.refreshGroups()
+                print("🔄 ContentView: Received group from AddExpenseView: \(group?.name ?? "nil")")
                 
                 // Navigate to group details page if group is provided
                 if let group = group {
+                    print("🔄 ContentView: Setting up navigation to group: \(group.name)")
+                    print("🔄 ContentView: Group ID: \(group.id)")
                     selectedGroupForDetails = group
                     showSuccessAlert = true
+                    print("🔄 ContentView: selectedGroupForDetails set to: \(group.name)")
+                    
+                    // Refresh groups after setting up navigation
+                    groupService.refreshGroups()
+                } else {
+                    print("🔄 ContentView: No group provided, not navigating")
+                    // Still refresh groups even if no navigation
+                    groupService.refreshGroups()
                 }
             })
         }
@@ -70,10 +88,15 @@ struct ContentView: View {
         .navigationDestination(item: $selectedGroupForDetails) { group in
             GroupDetailView(group: group, showSuccessMessage: showSuccessAlert)
                 .onAppear {
+                    print("🔄 ContentView: Navigation destination triggered for group: \(group.name)")
                     // Reset the success alert flag after navigation
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         showSuccessAlert = false
                     }
+                }
+                .onDisappear {
+                    print("🔄 ContentView: GroupDetailView disappeared, clearing selectedGroupForDetails")
+                    selectedGroupForDetails = nil
                 }
         }
     }
@@ -381,6 +404,11 @@ struct AddExpenseView: View {
     @State private var showingGroupPicker = false
     @State private var splitType = "Equally"
     
+    // Validation states
+    @State private var titleError = ""
+    @State private var amountError = ""
+    @State private var groupError = ""
+    
     @StateObject private var groupService = GroupService()
     @StateObject private var expenseService = ExpenseService()
     @Environment(\.dismiss) private var dismiss
@@ -439,6 +467,49 @@ struct AddExpenseView: View {
         }?.id
     }
     
+    // MARK: - Validation Methods
+    private func validateForm() -> Bool {
+        var isValid = true
+        
+        // Validate title
+        if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            titleError = "Title is required"
+            isValid = false
+        } else if title.count > 100 {
+            titleError = "Title must be less than 100 characters"
+            isValid = false
+        } else {
+            titleError = ""
+        }
+        
+        // Validate amount
+        if amount.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            amountError = "Amount is required"
+            isValid = false
+        } else if let amountValue = Double(amount), amountValue > 0 {
+            amountError = ""
+        } else {
+            amountError = "Please enter a valid amount greater than 0"
+            isValid = false
+        }
+        
+        // Validate group selection
+        if selectedGroup == nil {
+            groupError = "Please select a group"
+            isValid = false
+        } else {
+            groupError = ""
+        }
+        
+        return isValid
+    }
+    
+    private func clearValidationErrors() {
+        titleError = ""
+        amountError = ""
+        groupError = ""
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Navigation header
@@ -475,7 +546,7 @@ struct AddExpenseView: View {
             VStack(spacing: 0) {
                 // Input fields section
                 VStack(spacing: 20) {
-                    inputField(label: "Title", text: $title, placeholder: "Enter expense title")
+                    inputField(label: "Title", text: $title, placeholder: "Enter expense title", error: titleError)
                     
                     amountField
                     
@@ -540,12 +611,27 @@ struct AddExpenseView: View {
                     .frame(height: 50)
                     .background(Color.white)
                     .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(amountError.isEmpty ? Color.gray.opacity(0.3) : Color.red, lineWidth: 1)
+                    )
+                    .onChange(of: amount) { _, _ in
+                        if !amountError.isEmpty {
+                            clearValidationErrors()
+                        }
+                    }
+            }
+            
+            if !amountError.isEmpty {
+                Text(amountError)
+                    .font(.caption)
+                    .foregroundColor(.red)
             }
         }
     }
     
     // MARK: - Input Field
-    private func inputField(label: String, text: Binding<String>, placeholder: String) -> some View {
+    private func inputField(label: String, text: Binding<String>, placeholder: String, error: String = "") -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline)
@@ -558,6 +644,16 @@ struct AddExpenseView: View {
                 .padding(.vertical, 16)
                 .background(Color.white)
                 .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(error.isEmpty ? Color.gray.opacity(0.3) : Color.red, lineWidth: 1)
+                )
+            
+            if !error.isEmpty {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
         }
     }
     
@@ -655,6 +751,9 @@ struct AddExpenseView: View {
             } else {
                 Button(action: {
                     showingGroupPicker = true
+                    if !groupError.isEmpty {
+                        clearValidationErrors()
+                    }
                 }) {
                     HStack {
                         Text(selectedGroup?.name ?? "Select a group")
@@ -679,6 +778,12 @@ struct AddExpenseView: View {
                         isPresented: $showingGroupPicker
                     )
                 }
+            }
+            
+            if !groupError.isEmpty {
+                Text(groupError)
+                    .font(.caption)
+                    .foregroundColor(.red)
             }
         }
     }
@@ -765,7 +870,7 @@ struct AddExpenseView: View {
     private var addButton: some View {
         Button(action: {
             // Handle add expense action
-            if !title.isEmpty && !amount.isEmpty && selectedGroup != nil {
+            if validateForm() {
                 guard let group = selectedGroup,
                       let amountValue = Double(amount) else {
                     print("Invalid amount or group")
@@ -799,10 +904,12 @@ struct AddExpenseView: View {
                             groupService?.refreshGroups()
                         }
                         
-                        // Pass the selected group to the parent view and dismiss
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            print("🔄 AddExpenseView: Calling onExpenseAdded with group: \(selectedGroup?.name ?? "nil")")
-                            onExpenseAdded?(selectedGroup)
+                        // Pass the selected group to the parent view first, then dismiss after navigation is set up
+                        print("🔄 AddExpenseView: Calling onExpenseAdded with group: \(selectedGroup?.name ?? "nil")")
+                        onExpenseAdded?(selectedGroup)
+                        
+                        // Dismiss after a short delay to allow navigation to be set up
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             dismiss()
                         }
                     }
