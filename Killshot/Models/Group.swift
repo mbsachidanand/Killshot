@@ -115,12 +115,14 @@ struct GroupDetail: Codable, Identifiable, Equatable, Hashable {
  */
 struct GroupMember: Codable, Identifiable, Equatable, Hashable {
     let id: String        // Unique identifier for the member
+    let groupId: String   // ID of the group this member belongs to
+    let userId: String    // ID of the user
     let name: String      // Member's display name
     let email: String     // Member's email address
     let joinedAt: String  // When they joined the group (ISO 8601 format)
 
     enum CodingKeys: String, CodingKey {
-        case id, name, email, joinedAt
+        case id, groupId, userId, name, email, joinedAt
     }
 }
 
@@ -139,14 +141,14 @@ struct Expense: Codable, Identifiable, Equatable, Hashable {
     let paidBy: String          // ID of the person who paid for this expense
     let groupId: String         // ID of the group this expense belongs to
     let splitType: String       // How the expense is split (e.g., "equal", "percentage")
-    let splitDetails: [SplitDetail] // Detailed breakdown of how each member owes
+    let splits: [SplitDetail]   // Detailed breakdown of how each member owes
     let date: String            // When the expense occurred (ISO 8601 format)
     let description: String     // Optional additional details about the expense
     let createdAt: String       // When the expense was created (ISO 8601 format)
     let updatedAt: String       // When the expense was last modified (ISO 8601 format)
 
     enum CodingKeys: String, CodingKey {
-        case id, title, amount, paidBy, groupId, splitType, splitDetails, date, description, createdAt, updatedAt
+        case id, title, amount, paidBy, groupId, splitType, splits, date, description, createdAt, updatedAt
     }
 }
 
@@ -159,16 +161,15 @@ struct Expense: Codable, Identifiable, Equatable, Hashable {
  * expense they're responsible for.
  */
 struct SplitDetail: Codable, Identifiable, Equatable, Hashable {
+    let id: String          // Unique identifier for the split
+    let expenseId: String   // ID of the expense this split belongs to
     let userId: String      // ID of the group member
-    let userName: String    // Name of the group member
     let amount: Double      // How much this person owes
-    let percentage: Double  // What percentage of the total expense this represents
-
-    // Use userId as the unique identifier for SwiftUI
-    var id: String { userId }
+    let isPaid: Bool        // Whether this person has paid their share
+    let paidAt: String?     // When they paid (optional)
 
     enum CodingKeys: String, CodingKey {
-        case userId, userName, amount, percentage
+        case id, expenseId, userId, amount, isPaid, paidAt
     }
 }
 
