@@ -5,22 +5,57 @@
 //  Created by Sachidanand M B on 08/09/25.
 //
 
+// MARK: - Imports
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
 #endif
 
-
+/**
+ * ContentView - The main screen of our expense management app
+ *
+ * This is a SwiftUI View that represents the main interface where users can:
+ * - See all their groups
+ * - Add new expenses
+ * - Navigate to group details
+ *
+ * SwiftUI Views are like blueprints that describe what the UI should look like
+ * and how it should behave. They automatically update when data changes.
+ */
 struct ContentView: View {
+
+    // MARK: - State Properties
+    // These @StateObject and @State properties hold the data that drives our UI
+
+    /**
+     * @StateObject - Creates and manages a GroupService instance
+     * This service handles all group-related operations like fetching groups from the API
+     * @StateObject means SwiftUI will recreate this if the view is recreated
+     */
     @StateObject private var groupService = GroupService()
-    @State private var showingAddExpense = false
-    @State private var selectedGroupForDetails: Group?
-    @State private var showSuccessAlert = false
-    
-    // Current user information - in a real app, this would come from authentication
+
+    /**
+     * @State - Local state that controls UI behavior
+     * When these values change, SwiftUI automatically updates the UI
+     */
+    @State private var showingAddExpense = false        // Controls whether the "Add Expense" sheet is shown
+    @State private var selectedGroupForDetails: Group?  // Holds the group to navigate to after adding expense
+    @State private var showSuccessAlert = false         // Controls whether to show success alert in detail view
+
+    // MARK: - User Data
+    /**
+     * In a real app, this would come from authentication/login
+     * For now, we're using hardcoded user data
+     */
     private let currentUser = User(id: "1", name: "Rishab", email: "rishab@example.com")
-    
-    // Filter groups to show only those where current user is a member
+
+    // MARK: - Computed Properties
+    /**
+     * This is a computed property that filters groups to show only those where the current user is a member
+     *
+     * Computed properties are recalculated every time they're accessed
+     * They're perfect for derived data like this filtered list
+     */
     private var userGroups: [Group] {
         return groupService.groups.filter { group in
             group.members.contains { member in
@@ -28,18 +63,30 @@ struct ContentView: View {
             }
         }
     }
-    
-    
+
+
+    // MARK: - Main View Body
+    /**
+     * The body property is the main content of our SwiftUI View
+     * It must return some View (any SwiftUI view)
+     * This is where we define the structure and layout of our screen
+     */
     var body: some View {
+        // NavigationStack provides navigation capabilities (like UINavigationController in UIKit)
         NavigationStack {
             mainContent
+                // onAppear is called when this view appears on screen
+                // Perfect place to load data when the view first shows
                 .onAppear {
                     groupService.loadGroups()
                 }
+                // onChange watches for changes to groupService.groups
+                // When groups are updated (e.g., after adding an expense), this runs
                 .onChange(of: groupService.groups) { oldGroups, newGroups in
                     print("🔄 ContentView: Groups updated, count: \(newGroups.count)")
-                    
+
                     // If we have a pending navigation, find the updated group and navigate
+                    // This ensures we navigate to the most up-to-date group data
                     if let pendingGroup = selectedGroupForDetails {
                         if let updatedGroup = newGroups.first(where: { $0.id == pendingGroup.id }) {
                             print("🔄 ContentView: Found updated group for navigation: \(updatedGroup.name)")
@@ -48,21 +95,27 @@ struct ContentView: View {
                     }
                 }
         }
+        // MARK: - Sheet Presentation
+        // Different sheet styles for different platforms
         #if os(iOS)
+        // fullScreenCover presents a modal that covers the entire screen
+        // Perfect for important forms like adding expenses
         .fullScreenCover(isPresented: $showingAddExpense) {
+            // When the sheet is presented, create an AddExpenseView
+            // The onExpenseAdded closure is called when an expense is successfully added
             AddExpenseView(onExpenseAdded: { group in
                 print("🔄 ContentView: Received group from AddExpenseView: \(group?.name ?? "nil")")
-                
+
                 // Navigate to group details page if group is provided
                 if let group = group {
                     print("🔄 ContentView: Setting up navigation to group: \(group.name)")
                     print("🔄 ContentView: Group ID: \(group.id)")
-                    
+
                     // Set up navigation immediately
                     selectedGroupForDetails = group
                     showSuccessAlert = true
                     print("🔄 ContentView: selectedGroupForDetails set to: \(group.name)")
-                    
+
                     // Refresh groups in background
                     groupService.refreshGroups()
                 } else {
@@ -73,20 +126,22 @@ struct ContentView: View {
             })
         }
         #else
+        // sheet presents a modal that slides up from the bottom
+        // Used on macOS and other platforms
         .sheet(isPresented: $showingAddExpense) {
             AddExpenseView(onExpenseAdded: { group in
                 print("🔄 ContentView: Received group from AddExpenseView: \(group?.name ?? "nil")")
-                
+
                 // Navigate to group details page if group is provided
                 if let group = group {
                     print("🔄 ContentView: Setting up navigation to group: \(group.name)")
                     print("🔄 ContentView: Group ID: \(group.id)")
-                    
+
                     // Set up navigation immediately
                     selectedGroupForDetails = group
                     showSuccessAlert = true
                     print("🔄 ContentView: selectedGroupForDetails set to: \(group.name)")
-                    
+
                     // Refresh groups in background
                     groupService.refreshGroups()
                 } else {
@@ -97,124 +152,175 @@ struct ContentView: View {
             })
         }
         #endif
+        // MARK: - Navigation Destination
+        // navigationDestination defines what view to show when navigating to a group
+        // It automatically triggers when selectedGroupForDetails is set to a non-nil value
         .navigationDestination(item: $selectedGroupForDetails) { group in
+            // Create the GroupDetailView with the selected group
             GroupDetailView(group: group, showSuccessMessage: showSuccessAlert)
                 .onAppear {
                     print("🔄 ContentView: Navigation destination triggered for group: \(group.name)")
                     // Reset the success alert flag after navigation
+                    // We use a small delay to ensure the view is fully loaded
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         showSuccessAlert = false
                     }
                 }
                 .onDisappear {
                     print("🔄 ContentView: GroupDetailView disappeared, clearing selectedGroupForDetails")
+                    // Clear the selected group when we navigate away
+                    // This prevents the same group from being selected again
                     selectedGroupForDetails = nil
                 }
         }
     }
-    
+
     // MARK: - Main Content
+    /**
+     * This computed property defines the main content of our screen
+     * It's broken down into smaller, reusable components for better organization
+     */
     private var mainContent: some View {
+        // VStack arranges views vertically (top to bottom)
+        // spacing: 0 means no space between child views
         VStack(spacing: 0) {
-            appTitle
-            addExpenseButton
-            ScrollView {
-                groupsList
+            appTitle           // The "Expense Manager" title at the top
+            addExpenseButton   // The blue "Add expense" button
+            ScrollView {       // Scrollable container for the groups list
+                groupsList     // The list of groups
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity) // Make ScrollView fill available space
         }
-        .background(Color.gray.opacity(0.1))
+        .background(Color.gray.opacity(0.1)) // Light gray background
         #if os(iOS)
-        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .navigationBar) // Hide the default navigation bar on iOS
         #endif
     }
-    
+
     // MARK: - App Title
+    /**
+     * The main title of the app displayed at the top
+     * This is a reusable component that can be easily modified
+     */
     private var appTitle: some View {
         Text("Expense Manager")
-            .font(.largeTitle)
-            .fontWeight(.bold)
-            .foregroundColor(.primary)
-            .padding(.top, 20)
-            .padding(.bottom, 30)
-            .accessibilityAddTraits(.isHeader)
-            .accessibilityLabel("Expense Manager - Track and split expenses with your groups")
+            .font(.largeTitle)                    // Large, prominent text size
+            .fontWeight(.bold)                    // Bold text weight
+            .foregroundColor(.primary)            // Uses the system's primary text color (adapts to light/dark mode)
+            .padding(.top, 20)                    // Space from the top of the screen
+            .padding(.bottom, 30)                 // Space below the title
+            .accessibilityAddTraits(.isHeader)    // Tells VoiceOver this is a header
+            .accessibilityLabel("Expense Manager - Track and split expenses with your groups") // VoiceOver description
     }
-    
+
     // MARK: - Add Expense Button
+    /**
+     * The primary action button for adding new expenses
+     * This is a custom-styled button with a gradient background and icon
+     */
     private var addExpenseButton: some View {
         Button(action: {
+            // When tapped, show the Add Expense sheet
             showingAddExpense = true
         }) {
+            // HStack arranges the icon and text horizontally
             HStack {
+                // SF Symbol icon (Apple's built-in icon system)
                 Image(systemName: "plus.circle.fill")
                     .font(.title2)
                 Text("Add expense")
                     .font(.headline)
                     .fontWeight(.semibold)
             }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 50)
+            .foregroundColor(.white)              // White text and icon
+            .frame(maxWidth: .infinity)           // Button stretches to full width
+            .frame(height: 50)                    // Fixed height for consistent appearance
             .background(
+                // Linear gradient from blue to slightly transparent blue
                 LinearGradient(
                     gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
-                    startPoint: .leading,
-                    endPoint: .trailing
+                    startPoint: .leading,         // Gradient starts from left
+                    endPoint: .trailing           // Gradient ends at right
                 )
             )
-            .cornerRadius(12)
-            .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
+            .cornerRadius(12)                     // Rounded corners
+            .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2) // Subtle shadow
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 30)
-        .accessibilityLabel("Add new expense")
-        .accessibilityHint("Tap to create a new expense for any group")
-        .buttonStyle(PlainButtonStyle())
+        .padding(.horizontal, 20)                 // Horizontal padding from screen edges
+        .padding(.bottom, 30)                     // Space below the button
+        .accessibilityLabel("Add new expense")    // VoiceOver label
+        .accessibilityHint("Tap to create a new expense for any group") // VoiceOver hint
+        .buttonStyle(PlainButtonStyle())          // Remove default button styling
     }
-    
+
     // MARK: - Groups List
+    /**
+     * The main list of groups with different states:
+     * - Loading: Shows a spinner while fetching data
+     * - Error: Shows error message if something went wrong
+     * - Empty: Shows message when no groups exist
+     * - Content: Shows the actual list of groups
+     */
     private var groupsList: some View {
         VStack(spacing: 8) {
+            // Conditional rendering based on the current state
             if let error = groupService.error {
+                // Show error view if there's an error
                 errorView(error)
             } else if groupService.isLoading {
+                // Show loading spinner while data is being fetched
                 loadingView
             } else if userGroups.isEmpty {
+                // Show empty state when no groups exist
                 emptyStateView
             } else {
+                // Show the actual list of groups
+                // ForEach iterates through each group and creates a row for it
+                // enumerated() gives us both the index and the group
                 ForEach(Array(userGroups.enumerated()), id: \.element.id) { index, group in
                     groupRow(for: group, at: index)
                 }
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 20)
+        .padding(.horizontal, 20)  // Horizontal padding from screen edges
+        .padding(.bottom, 20)      // Bottom padding
     }
-    
+
     // MARK: - Group Row
+    /**
+     * Creates a row for each group in the list
+     * This is a function that takes a Group and returns a View
+     * Each row shows group info and can be tapped to navigate to group details
+     */
     private func groupRow(for group: Group, at index: Int) -> some View {
+        // NavigationLink makes the entire row tappable and navigates to GroupDetailView
         NavigationLink(destination: GroupDetailView(group: group, showSuccessMessage: false)) {
             HStack {
+                // Left side: Group information
                 VStack(alignment: .leading, spacing: 4) {
+                    // Group name
                     Text(group.name)
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
-                        .lineLimit(1)
-                    
+                        .lineLimit(1)  // Truncate if too long
+
+                    // Group description (only show if not empty)
                     if !group.description.isEmpty {
                         Text(group.description)
                             .font(.caption)
                             .foregroundColor(.secondary)
-                            .lineLimit(2)
+                            .lineLimit(2)  // Allow up to 2 lines
                     }
-                    
+
+                    // Bottom row: Member count and total expenses
                     HStack(spacing: 12) {
+                        // Member count with person icon
                         Label("\(group.memberCountInt)", systemImage: "person.2")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                        
+
+                        // Total expenses (only show if > 0)
                         if group.totalExpensesDouble > 0 {
                             HStack(spacing: 4) {
                                 Image(systemName: "indianrupeesign.circle")
@@ -223,89 +329,109 @@ struct ContentView: View {
                                     .font(.caption2)
                                     .fontWeight(.medium)
                             }
-                            .foregroundColor(.green)
+                            .foregroundColor(.green)  // Green color for money
                         }
                     }
                 }
-                
+
+                // Spacer pushes content to the left and right
                 Spacer()
-                
+
+                // Right side: Chevron indicating this is tappable
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.primary)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-            .background(Color.white)
-            .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+            .padding(.horizontal, 20)  // Horizontal padding inside the row
+            .padding(.vertical, 16)    // Vertical padding inside the row
+            .background(Color.white)   // White background
+            .cornerRadius(12)          // Rounded corners
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1) // Subtle shadow
         }
-        .buttonStyle(PlainButtonStyle())
-        .accessibilityElement(children: .combine)
+        .buttonStyle(PlainButtonStyle())  // Remove default button styling
+        .accessibilityElement(children: .combine)  // Combine all text for VoiceOver
         .accessibilityLabel("\(group.name) group with \(group.memberCountInt) members")
         .accessibilityHint("Tap to view group details and expenses")
         .accessibilityValue(group.totalExpensesDouble > 0 ? "Total expenses: ₹\(String(format: "%.0f", group.totalExpensesDouble))" : "No expenses yet")
     }
-    
+
     // MARK: - Loading View
+    /**
+     * Shows a loading spinner while groups are being fetched from the API
+     * This appears when groupService.isLoading is true
+     */
     private var loadingView: some View {
         VStack(spacing: 16) {
+            // ProgressView is SwiftUI's built-in loading spinner
             ProgressView()
-                .scaleEffect(1.2)
-            
+                .scaleEffect(1.2)  // Make it slightly larger
+
             Text("Loading groups...")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .frame(maxWidth: .infinity)  // Center the content
+        .padding(.vertical, 40)      // Vertical padding for spacing
     }
-    
+
     // MARK: - Empty State View
+    /**
+     * Shows when the user has no groups yet
+     * Provides guidance on what to do next
+     */
     private var emptyStateView: some View {
         VStack(spacing: 16) {
+            // Large folder icon to represent empty state
             Image(systemName: "folder")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
-            
+
             Text("No groups found")
                 .font(.headline)
                 .foregroundColor(.primary)
-            
+
             Text("Create your first group to get started")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-            
+                .multilineTextAlignment(.center)  // Center-align multi-line text
+
             Button("Create Group") {
                 // TODO: Implement create group functionality
+                // This would typically show a create group form
             }
             .font(.subheadline)
             .foregroundColor(.blue)
             .padding(.top, 8)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .frame(maxWidth: .infinity)  // Center the content
+        .padding(.vertical, 40)      // Vertical padding for spacing
     }
-    
+
     // MARK: - Error View
+    /**
+     * Shows when there's an error loading groups
+     * Displays the error message and provides a retry button
+     */
     private func errorView(_ error: APIError) -> some View {
         VStack(spacing: 16) {
+            // Warning triangle icon
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 48))
                 .foregroundColor(.red)
-            
+
             Text("Something went wrong")
                 .font(.headline)
                 .foregroundColor(.primary)
-            
+
+            // Show the actual error message
             Text(error.localizedDescription)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            
+                .padding(.horizontal)  // Horizontal padding for text wrapping
+
             Button("Try Again") {
+                // Clear the error and retry loading groups
                 groupService.clearError()
                 groupService.refreshGroups()
             }
@@ -313,36 +439,52 @@ struct ContentView: View {
             .foregroundColor(.blue)
             .padding(.top, 8)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .frame(maxWidth: .infinity)  // Center the content
+        .padding(.vertical, 40)      // Vertical padding for spacing
     }
 }
 
-// Group detail view
+// MARK: - Group Detail View
+/**
+ * GroupDetailView - Shows detailed information about a specific group
+ *
+ * This view displays:
+ * - Group name and description
+ * - Member count and total expenses
+ * - List of recent expenses
+ * - Success alert when navigating from expense creation
+ */
 struct GroupDetailView: View {
-    let group: Group
-    let showSuccessMessage: Bool
-    @State private var showAlert = false
-    
+    // MARK: - Properties
+    let group: Group                    // The group to display details for
+    let showSuccessMessage: Bool        // Whether to show success alert on appear
+    @State private var showAlert = false // Controls the success alert display
+
+    // MARK: - Main View Body
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Group header
+            // MARK: - Group Header Section
             VStack(alignment: .leading, spacing: 8) {
+                // Group name as large title
                 Text(group.name)
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                
+
+                // Group description (only show if not empty)
                 if !group.description.isEmpty {
                     Text(group.description)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-                
+
+                // Group stats: member count and total expenses
                 HStack(spacing: 16) {
+                    // Member count with person icon
                     Label("\(group.memberCountInt) members", systemImage: "person.2")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
+                    // Total expenses (only show if > 0)
                     if group.totalExpensesDouble > 0 {
                         Label("₹\(String(format: "%.0f", group.totalExpensesDouble)) total", systemImage: "indianrupeesign.circle")
                             .font(.caption)
@@ -350,50 +492,57 @@ struct GroupDetailView: View {
                     }
                 }
             }
-            .padding(.horizontal)
-            
-            Divider()
-            
-            // Group content
+            .padding(.horizontal)  // Horizontal padding for the header
+
+            Divider()  // Visual separator between header and content
+
+            // MARK: - Group Content Section
             VStack(alignment: .leading, spacing: 16) {
                 Text("Recent Expenses")
                     .font(.headline)
                     .padding(.horizontal)
-                
+
+                // Conditional content based on whether there are expenses
                 if group.totalExpensesDouble == 0 {
+                    // Empty state when no expenses exist
                     VStack(spacing: 12) {
                         Image(systemName: "receipt")
                             .font(.system(size: 32))
                             .foregroundColor(.secondary)
-                        
+
                         Text("No expenses yet")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        
+
                         Text("Add your first expense to get started")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                     }
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity)  // Center the empty state
                     .padding(.vertical, 40)
                 } else {
                     // TODO: Add expense list here
+                    // This would show a list of expenses when implemented
                     Text("Expense list will be implemented here")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .padding(.horizontal)
                 }
             }
-            
-            Spacer()
+
+            Spacer()  // Push content to the top
         }
-        .navigationTitle(group.name)
+        // MARK: - Navigation Configuration
+        .navigationTitle(group.name)  // Set the navigation bar title
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.inline)  // Use inline title style on iOS
         #endif
+
+        // MARK: - Success Alert
+        // Alert that shows when navigating here after adding an expense
         .alert("Expense Added!", isPresented: $showAlert) {
-            Button("OK") { }
+            Button("OK") { }  // Dismiss button
         } message: {
             Text("Your expense has been successfully added to this group.")
         }
@@ -415,21 +564,21 @@ struct AddExpenseView: View {
     @State private var selectedGroup: Group?
     @State private var showingGroupPicker = false
     @State private var splitType = "Equally"
-    
+
     // Validation states
     @State private var titleError = ""
     @State private var amountError = ""
     @State private var groupError = ""
-    
+
     @StateObject private var groupService = GroupService()
     @StateObject private var expenseService = ExpenseService()
     @Environment(\.dismiss) private var dismiss
-    
+
     let onExpenseAdded: ((Group?) -> Void)?
-    
+
     // Current user information - in a real app, this would come from authentication
     private let currentUser = User(id: "1", name: "Rishab", email: "rishab@example.com")
-    
+
     // Filter groups to show only those where current user is a member
     private var userGroups: [Group] {
         return groupService.groups.filter { group in
@@ -438,7 +587,7 @@ struct AddExpenseView: View {
             }
         }
     }
-    
+
     // Get all unique members from user's groups for "Paid by" selection
     private var availableMembers: [GroupMember] {
         let allMembers = userGroups.flatMap { $0.members }
@@ -446,7 +595,7 @@ struct AddExpenseView: View {
             .compactMap { $0.value.first }
         return uniqueMembers.sorted { $0.name < $1.name }
     }
-    
+
     // Convert members to display strings for dropdown
     private var memberDisplayOptions: [String] {
         // Sort members to put current user first, then others alphabetically
@@ -459,7 +608,7 @@ struct AddExpenseView: View {
                 return member1.name < member2.name // Alphabetical order for others
             }
         }
-        
+
         return sortedMembers.map { member in
             if member.id == currentUser.id {
                 return "\(member.name) (me)"
@@ -468,7 +617,7 @@ struct AddExpenseView: View {
             }
         }
     }
-    
+
     // Get member ID from display name
     private func getMemberId(from displayName: String) -> String? {
         if displayName == "\(currentUser.name) (me)" {
@@ -478,11 +627,11 @@ struct AddExpenseView: View {
             member.name == displayName
         }?.id
     }
-    
+
     // MARK: - Validation Methods
     private func validateForm() -> Bool {
         var isValid = true
-        
+
         // Validate title
         if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             titleError = "Title is required"
@@ -493,7 +642,7 @@ struct AddExpenseView: View {
         } else {
             titleError = ""
         }
-        
+
         // Validate amount
         if amount.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             amountError = "Amount is required"
@@ -504,7 +653,7 @@ struct AddExpenseView: View {
             amountError = "Please enter a valid amount greater than 0"
             isValid = false
         }
-        
+
         // Validate group selection
         if selectedGroup == nil {
             groupError = "Please select a group"
@@ -512,16 +661,16 @@ struct AddExpenseView: View {
         } else {
             groupError = ""
         }
-        
+
         return isValid
     }
-    
+
     private func clearValidationErrors() {
         titleError = ""
         amountError = ""
         groupError = ""
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Navigation header
@@ -532,16 +681,16 @@ struct AddExpenseView: View {
                 .foregroundColor(.blue)
                 .font(.title3)
                 .fontWeight(.medium)
-                
+
                 Spacer()
-                
+
                 Text("Add expense")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
-                
+
                 Spacer()
-                
+
                 // Invisible button to balance the layout
                 Button("Cancel") {
                     dismiss()
@@ -553,34 +702,34 @@ struct AddExpenseView: View {
             .padding(.top, 60)
             .padding(.bottom, 8)
             .background(Color.gray.opacity(0.03))
-            
+
             // Main content with light grey background
             VStack(spacing: 0) {
                 // Input fields section
                 VStack(spacing: 20) {
                     inputField(label: "Title", text: $title, placeholder: "Enter expense title", error: titleError)
-                    
+
                     amountField
-                    
+
                     // Paid by and When side by side
                     HStack(spacing: 16) {
                         dropdownField(label: "Paid by", value: $paidBy, options: memberDisplayOptions)
-                        
+
                         datePickerField
                     }
-                    
+
                     groupSelectionField
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
                 .padding(.bottom, 20)
                 .background(Color.gray.opacity(0.05))
-                
+
                 // Split among section
                 splitAmongSection
-                
+
                 Spacer()
-                
+
                 // Add button
                 addButton
             }
@@ -595,7 +744,7 @@ struct AddExpenseView: View {
         .background(Color.gray.opacity(0.05))
         .ignoresSafeArea(.all, edges: .all)
     }
-    
+
     // MARK: - Amount Field
     private var amountField: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -603,7 +752,7 @@ struct AddExpenseView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
-            
+
             HStack(spacing: 8) {
                 // Currency symbol in its own separate white box
                 Text("₹")
@@ -612,7 +761,7 @@ struct AddExpenseView: View {
                     .frame(width: 50, height: 50)
                     .background(Color.white)
                     .cornerRadius(12)
-                
+
                 // Amount field in its own separate white box
                 TextField("Enter amount", text: $amount)
                     #if canImport(UIKit)
@@ -633,7 +782,7 @@ struct AddExpenseView: View {
                         }
                     }
             }
-            
+
             if !amountError.isEmpty {
                 Text(amountError)
                     .font(.caption)
@@ -641,7 +790,7 @@ struct AddExpenseView: View {
             }
         }
     }
-    
+
     // MARK: - Input Field
     private func inputField(label: String, text: Binding<String>, placeholder: String, error: String = "") -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -649,7 +798,7 @@ struct AddExpenseView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
-            
+
             TextField(placeholder, text: text)
                 .font(.body)
                 .padding(.horizontal, 16)
@@ -660,7 +809,7 @@ struct AddExpenseView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(error.isEmpty ? Color.gray.opacity(0.3) : Color.red, lineWidth: 1)
                 )
-            
+
             if !error.isEmpty {
                 Text(error)
                     .font(.caption)
@@ -668,7 +817,7 @@ struct AddExpenseView: View {
             }
         }
     }
-    
+
     // MARK: - Dropdown Field
     private func dropdownField(label: String, value: Binding<String>, options: [String]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -676,7 +825,7 @@ struct AddExpenseView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
-            
+
             Menu {
                 ForEach(options, id: \.self) { option in
                     Button(action: {
@@ -690,9 +839,9 @@ struct AddExpenseView: View {
                     Text(value.wrappedValue)
                         .font(.body)
                         .foregroundColor(.primary)
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "chevron.down")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.primary)
@@ -704,7 +853,7 @@ struct AddExpenseView: View {
             }
         }
     }
-    
+
     // MARK: - Date Picker Field
     private var datePickerField: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -712,7 +861,7 @@ struct AddExpenseView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
-            
+
             DatePicker("", selection: $when, displayedComponents: .date)
                 .datePickerStyle(CompactDatePickerStyle())
                 .labelsHidden()
@@ -722,14 +871,14 @@ struct AddExpenseView: View {
                 .cornerRadius(12)
         }
     }
-    
+
     // MARK: - Date Formatting Helper
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return formatter.string(from: date)
     }
-    
+
     // MARK: - Group Selection Field
     private var groupSelectionField: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -737,7 +886,7 @@ struct AddExpenseView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
-            
+
             if groupService.isLoading {
                 HStack {
                     ProgressView()
@@ -771,9 +920,9 @@ struct AddExpenseView: View {
                         Text(selectedGroup?.name ?? "Select a group")
                             .font(.body)
                             .foregroundColor(selectedGroup == nil ? .secondary : .primary)
-                        
+
                         Spacer()
-                        
+
                         Image(systemName: "chevron.down")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.primary)
@@ -791,7 +940,7 @@ struct AddExpenseView: View {
                     )
                 }
             }
-            
+
             if !groupError.isEmpty {
                 Text(groupError)
                     .font(.caption)
@@ -799,7 +948,7 @@ struct AddExpenseView: View {
             }
         }
     }
-    
+
     // MARK: - Split Among Section
     private var splitAmongSection: some View {
         VStack(spacing: 0) {
@@ -809,14 +958,14 @@ struct AddExpenseView: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
-                
+
                 Spacer()
-                
+
                 HStack {
                     Text(splitType)
                         .font(.subheadline)
                         .foregroundColor(.primary)
-                    
+
                     Image(systemName: "chevron.down")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.primary)
@@ -824,7 +973,7 @@ struct AddExpenseView: View {
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
-            
+
             // Members list with individual boxes
             if let selectedGroup = selectedGroup, !selectedGroup.members.isEmpty {
                 VStack(spacing: 8) {
@@ -833,9 +982,9 @@ struct AddExpenseView: View {
                             Text(member.name)
                                 .font(.body)
                                 .foregroundColor(.primary)
-                            
+
                             Spacer()
-                            
+
                             Text("₹\(String(format: "%.1f", calculateEqualSplit()))")
                                 .font(.body)
                                 .fontWeight(.medium)
@@ -854,7 +1003,7 @@ struct AddExpenseView: View {
                         Text("Select a group to see members")
                             .font(.body)
                             .foregroundColor(.secondary)
-                        
+
                         Spacer()
                     }
                     .padding(.horizontal, 20)
@@ -867,7 +1016,7 @@ struct AddExpenseView: View {
         }
         .padding(.top, 0)
     }
-    
+
     // MARK: - Helper Functions
     private func calculateEqualSplit() -> Double {
         guard let selectedGroup = selectedGroup,
@@ -877,7 +1026,7 @@ struct AddExpenseView: View {
         }
         return amountValue / Double(selectedGroup.members.count)
     }
-    
+
     // MARK: - Add Button
     private var addButton: some View {
         Button(action: {
@@ -888,17 +1037,17 @@ struct AddExpenseView: View {
                     print("Invalid amount or group")
                     return
                 }
-                
+
                 // Format date for API
                 let formatter = ISO8601DateFormatter()
                 let dateString = formatter.string(from: when)
-                
+
                 // Get the selected member ID
                 guard let selectedMemberId = getMemberId(from: paidBy) else {
                     print("Error: Could not find member ID for selected payer")
                     return
                 }
-                
+
                 // Create expense
                 expenseService.createExpense(
                     title: title,
@@ -915,11 +1064,11 @@ struct AddExpenseView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                             groupService?.refreshGroups()
                         }
-                        
+
                         // Pass the selected group to the parent view first, then dismiss after navigation is set up
                         print("🔄 AddExpenseView: Calling onExpenseAdded with group: \(selectedGroup?.name ?? "nil")")
                         onExpenseAdded?(selectedGroup)
-                        
+
                         // Dismiss after a short delay to allow navigation to be set up
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             dismiss()
@@ -936,7 +1085,7 @@ struct AddExpenseView: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .scaleEffect(0.8)
                 }
-                
+
                 Text(expenseService.isLoading ? "Adding..." : "Add")
                     .font(.headline)
                     .fontWeight(.semibold)
@@ -960,7 +1109,7 @@ struct AddExpenseView: View {
             Text(expenseService.error?.localizedDescription ?? "An error occurred while creating the expense.")
         }
     }
-    
+
     // MARK: - Form Validation
     private var isFormValid: Bool {
         return !title.isEmpty && !amount.isEmpty && selectedGroup != nil
@@ -972,7 +1121,7 @@ struct GroupPickerView: View {
     let groups: [Group]
     @Binding var selectedGroup: Group?
     @Binding var isPresented: Bool
-    
+
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -982,9 +1131,9 @@ struct GroupPickerView: View {
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
-                    
+
                     Spacer()
-                    
+
                     Button("Cancel") {
                         isPresented = false
                     }
@@ -995,7 +1144,7 @@ struct GroupPickerView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 20)
                 .background(Color.white)
-                
+
                 // Groups list
                 ScrollView {
                     LazyVStack(spacing: 8) {
@@ -1010,18 +1159,18 @@ struct GroupPickerView: View {
                                             .font(.body)
                                             .fontWeight(.medium)
                                             .foregroundColor(.primary)
-                                        
+
                                         Text(group.description)
                                             .font(.caption)
                                             .foregroundColor(.secondary)
-                                        
+
                                         Text("\(group.memberCountInt) members")
                                             .font(.caption2)
                                             .foregroundColor(.secondary)
                                     }
-                                    
+
                                     Spacer()
-                                    
+
                                     if selectedGroup?.id == group.id {
                                         Image(systemName: "checkmark")
                                             .font(.system(size: 16, weight: .medium))

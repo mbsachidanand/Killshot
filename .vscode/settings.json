@@ -1,0 +1,168 @@
+{
+  // General editor settings
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.rulers": [100, 120],
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wordWrapColumn": 100,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.trimAutoWhitespace": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+
+  // Language-specific settings
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.rulers": [100]
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.rulers": [100]
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2
+  },
+  "[swift]": {
+    "editor.defaultFormatter": "vknabel.vscode-swiftformat",
+    "editor.tabSize": 4,
+    "editor.rulers": [120],
+    "editor.semanticHighlighting.enabled": true
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.wordWrap": "on"
+  },
+
+  // ESLint configuration
+  "eslint.enable": true,
+  "eslint.validate": [
+    "javascript",
+    "typescript",
+    "javascriptreact",
+    "typescriptreact"
+  ],
+  "eslint.workingDirectories": ["backend"],
+  "eslint.options": {
+    "extensions": [".js", ".ts", ".jsx", ".tsx"]
+  },
+
+  // Prettier configuration
+  "prettier.enable": true,
+  "prettier.requireConfig": true,
+  "prettier.useEditorConfig": true,
+
+  // SwiftLint configuration
+  "swiftlint.enable": true,
+  "swiftlint.path": "swiftlint",
+  "swiftlint.configFile": ".swiftlint.yml",
+
+  // SwiftFormat configuration
+  "swiftformat.enable": true,
+  "swiftformat.path": "swiftformat",
+  "swiftformat.configFile": ".swiftformat",
+
+  // File associations
+  "files.associations": {
+    "*.swift": "swift",
+    "*.js": "javascript",
+    "*.ts": "typescript",
+    "*.json": "json",
+    "*.yml": "yaml",
+    "*.yaml": "yaml",
+    "*.md": "markdown",
+    "*.sql": "sql",
+    "*.sh": "shellscript",
+    "*.bash": "shellscript"
+  },
+
+  // Exclude files from search and explorer
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/DerivedData": true,
+    "**/build": true,
+    "**/.build": true,
+    "**/Pods": true,
+    "**/*.xcworkspace": true,
+    "**/*.xcodeproj": true
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/DerivedData": true,
+    "**/build": true,
+    "**/.build": true,
+    "**/Pods": true
+  },
+
+  // Terminal settings
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.fontSize": 14,
+  "terminal.integrated.fontFamily": "Menlo, Monaco, 'Courier New', monospace",
+
+  // Git settings
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "git.autofetch": true,
+  "git.enableCommitSigning": true,
+
+  // IntelliSense settings
+  "typescript.suggest.autoImports": true,
+  "javascript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  // Emmet settings
+  "emmet.includeLanguages": {
+    "swift": "html"
+  },
+
+  // Bracket pair colorization
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+
+  // Minimap settings
+  "editor.minimap.enabled": true,
+  "editor.minimap.showSlider": "always",
+
+  // Breadcrumbs
+  "breadcrumbs.enabled": true,
+
+  // Problems panel
+  "problems.decorations.enabled": true,
+
+  // Explorer settings
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+
+  // Workbench settings
+  "workbench.colorTheme": "Default Dark+",
+  "workbench.iconTheme": "vs-seti",
+  "workbench.startupEditor": "newUntitledFile",
+
+  // Telemetry
+  "telemetry.telemetryLevel": "off",
+
+  // Extensions recommendations
+  "extensions.ignoreRecommendations": false
+}

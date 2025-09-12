@@ -1,0 +1,240 @@
+{
+  "folders": [
+    {
+      "name": "Killshot iOS App",
+      "path": "./Killshot"
+    },
+    {
+      "name": "Backend API",
+      "path": "./backend"
+    },
+    {
+      "name": "Project Root",
+      "path": "."
+    }
+  ],
+  "settings": {
+    // Workspace-specific settings
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/DerivedData": true,
+      "**/build": true,
+      "**/.build": true,
+      "**/Pods": true,
+      "**/*.xcworkspace": true,
+      "**/*.xcodeproj": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/DerivedData": true,
+      "**/build": true,
+      "**/.build": true,
+      "**/Pods": true,
+      "**/*.xcworkspace": true,
+      "**/*.xcodeproj": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      // Swift/iOS Development
+      "sswg.swift-lang",
+      "vknabel.vscode-swiftformat",
+      "vadimcn.vscode-lldb",
+      // JavaScript/TypeScript/Node.js
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "ms-vscode.vscode-typescript-next",
+      "bradlc.vscode-tailwindcss",
+      // General Development
+      "ms-vscode.vscode-json",
+      "redhat.vscode-yaml",
+      "ms-vscode.vscode-markdown",
+      "ms-vscode.hexeditor",
+      // Git
+      "eamodio.gitlens",
+      "github.vscode-pull-request-github",
+      // Database
+      "ms-mssql.mssql",
+      "ms-vscode.vscode-sqlite",
+      // Docker
+      "ms-azuretools.vscode-docker",
+      // REST API
+      "humao.rest-client",
+      "rangav.vscode-thunder-client",
+      // Productivity
+      "ms-vscode.vscode-todo-highlight",
+      "gruntfuggly.todo-tree",
+      "alefragnani.bookmarks",
+      "ms-vscode.vscode-json",
+      // Themes and Icons
+      "pkief.material-icon-theme",
+      "zhuangtongfa.material-theme",
+      // Utilities
+      "ms-vscode.vscode-json",
+      "ms-vscode.hexeditor",
+      "ms-vscode.vscode-markdown",
+      "yzhang.markdown-all-in-one"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Backend: Install Dependencies",
+        "type": "shell",
+        "command": "npm install",
+        "options": {
+          "cwd": "${workspaceFolder}/backend"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Backend: Start Development Server",
+        "type": "shell",
+        "command": "npm run dev",
+        "options": {
+          "cwd": "${workspaceFolder}/backend"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "isBackground": true
+      },
+      {
+        "label": "Backend: Run Tests",
+        "type": "shell",
+        "command": "npm test",
+        "options": {
+          "cwd": "${workspaceFolder}/backend"
+        },
+        "group": "test",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Backend: Lint Code",
+        "type": "shell",
+        "command": "npm run lint",
+        "options": {
+          "cwd": "${workspaceFolder}/backend"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Backend: Format Code",
+        "type": "shell",
+        "command": "npm run format",
+        "options": {
+          "cwd": "${workspaceFolder}/backend"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "iOS: Run SwiftLint",
+        "type": "shell",
+        "command": "swiftlint",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "iOS: Fix SwiftLint Issues",
+        "type": "shell",
+        "command": "swiftlint --fix",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Setup: Install SwiftLint",
+        "type": "shell",
+        "command": "./setup-swiftlint.sh",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Backend: Debug Server",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/backend/src/server.js",
+        "cwd": "${workspaceFolder}/backend",
+        "env": {
+          "NODE_ENV": "development"
+        },
+        "console": "integratedTerminal",
+        "restart": true,
+        "protocol": "inspector"
+      },
+      {
+        "name": "Backend: Run Tests",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/backend/node_modules/.bin/jest",
+        "cwd": "${workspaceFolder}/backend",
+        "args": [
+          "--runInBand"
+        ],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen"
+      }
+    ]
+  }
+}

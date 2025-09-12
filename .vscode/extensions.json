@@ -1,0 +1,51 @@
+{
+  "recommendations": [
+    // Swift/iOS Development
+    "sswg.swift-lang",
+    "vknabel.vscode-swiftformat",
+    "vadimcn.vscode-lldb",
+
+    // JavaScript/TypeScript/Node.js
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vscode.vscode-typescript-next",
+
+    // General Development
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "ms-vscode.vscode-markdown",
+
+    // Git
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+
+    // Database
+    "ms-mssql.mssql",
+    "ms-vscode.vscode-sqlite",
+
+    // Docker
+    "ms-azuretools.vscode-docker",
+
+    // REST API
+    "humao.rest-client",
+    "rangav.vscode-thunder-client",
+
+    // Productivity
+    "ms-vscode.vscode-todo-highlight",
+    "gruntfuggly.todo-tree",
+    "alefragnani.bookmarks",
+
+    // Themes and Icons
+    "pkief.material-icon-theme",
+    "zhuangtongfa.material-theme",
+
+    // Utilities
+    "ms-vscode.hexeditor",
+    "yzhang.markdown-all-in-one"
+  ],
+  "unwantedRecommendations": [
+    // Extensions that might conflict or are not needed
+    "ms-vscode.vscode-typescript",
+    "hookyqr.beautify"
+  ]
+}

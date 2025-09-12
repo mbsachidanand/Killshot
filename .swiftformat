@@ -1,0 +1,17 @@
+# SwiftFormat Configuration for Killshot iOS App
+--indent 4
+--tabwidth 4
+--maxwidth 120
+--wraparguments before-first
+--wrapcollections before-first
+--closingparen balanced
+--commas inline
+--semicolons always
+--trimwhitespace always
+--insertlines
+--removelines
+--allman false
+--header strip
+--ifdef no-indent
+--stripunusedargs closure-only
+--experimental

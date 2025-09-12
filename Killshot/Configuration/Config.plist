@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_BASE_URL_DEVELOPMENT</key>
+	<string>http://localhost:3001/api/v1</string>
+	<key>API_BASE_URL_STAGING</key>
+	<string>https://api-staging.killshot.app/api/v1</string>
+	<key>API_BASE_URL_PRODUCTION</key>
+	<string>https://api.killshot.app/api/v1</string>
+	<key>API_TIMEOUT_DEVELOPMENT</key>
+	<real>30.0</real>
+	<key>API_TIMEOUT_STAGING</key>
+	<real>20.0</real>
+	<key>API_TIMEOUT_PRODUCTION</key>
+	<real>15.0</real>
+	<key>ANALYTICS_ENABLED_DEVELOPMENT</key>
+	<false/>
+	<key>ANALYTICS_ENABLED_STAGING</key>
+	<true/>
+	<key>ANALYTICS_ENABLED_PRODUCTION</key>
+	<true/>
+	<key>DEBUG_FEATURES_ENABLED_DEVELOPMENT</key>
+	<true/>
+	<key>DEBUG_FEATURES_ENABLED_STAGING</key>
+	<false/>
+	<key>DEBUG_FEATURES_ENABLED_PRODUCTION</key>
+	<false/>
+	<key>LOG_LEVEL_DEVELOPMENT</key>
+	<string>debug</string>
+	<key>LOG_LEVEL_STAGING</key>
+	<string>info</string>
+	<key>LOG_LEVEL_PRODUCTION</key>
+	<string>error</string>
+	<key>CACHE_POLICY_DEVELOPMENT</key>
+	<string>reloadIgnoringLocalCacheData</string>
+	<key>CACHE_POLICY_STAGING</key>
+	<string>useProtocolCachePolicy</string>
+	<key>CACHE_POLICY_PRODUCTION</key>
+	<string>useProtocolCachePolicy</string>
+</dict>
+</plist>
