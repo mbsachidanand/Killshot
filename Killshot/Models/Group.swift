@@ -50,8 +50,9 @@ struct Group: Codable, Identifiable, Equatable, Hashable {
     let expenses: [Expense]     // List of expenses in this group
     let createdAt: String       // When the group was created (ISO 8601 format)
     let updatedAt: String       // When the group was last modified (ISO 8601 format)
-    let memberCount: String     // Number of members (from backend, as string)
-    let totalExpenses: String   // Total amount of all expenses (from backend, as string)
+    let memberCount: Int        // Number of members (from backend)
+    let totalExpenses: Double   // Total amount of all expenses (from backend)
+    let createdBy: String       // Who created the group
 
     // MARK: - Computed Properties
     /**
@@ -61,23 +62,22 @@ struct Group: Codable, Identifiable, Equatable, Hashable {
      * without having to convert from string or count the members array.
      */
     var memberCountInt: Int {
-        return members.count
+        return memberCount
     }
 
     /**
      * totalExpensesDouble - Convenience property to get total expenses as a double
      *
-     * This converts the string total from the backend to a Double for calculations.
-     * The backend provides this as a string to maintain precision.
+     * This provides direct access to the total expenses as a Double.
+     * The backend provides this as a number for better type safety.
      */
     var totalExpensesDouble: Double {
-        // Use the backend-calculated totalExpenses field for accuracy
-        return Double(totalExpenses) ?? 0.0
+        return totalExpenses
     }
 
     // MARK: - Coding Keys
     enum CodingKeys: String, CodingKey {
-        case id, name, description, members, expenses, createdAt, updatedAt, memberCount, totalExpenses
+        case id, name, description, members, expenses, createdAt, updatedAt, memberCount, totalExpenses, createdBy
     }
 }
 
@@ -97,9 +97,12 @@ struct GroupDetail: Codable, Identifiable, Equatable, Hashable {
     let expenses: [Expense]     // List of group expenses
     let createdAt: String       // Creation timestamp
     let updatedAt: String       // Last update timestamp
+    let memberCount: Int        // Number of members
+    let totalExpenses: Double   // Total amount of expenses
+    let createdBy: String       // Who created the group
 
     enum CodingKeys: String, CodingKey {
-        case id, name, description, members, expenses, createdAt, updatedAt
+        case id, name, description, members, expenses, createdAt, updatedAt, memberCount, totalExpenses, createdBy
     }
 }
 
