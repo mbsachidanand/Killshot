@@ -17,10 +17,13 @@ export class Group implements GroupType, DatabaseEntity {
   public readonly id: string;
   public name: string;
   public description: string;
+  public createdBy: string;
   public readonly createdAt: Date;
   public updatedAt: Date;
   public members: GroupMember[];
   public expenses: Expense[];
+  public totalExpenses: number;
+  public memberCount: number;
 
   /**
    * Constructor for Group
@@ -35,16 +38,20 @@ export class Group implements GroupType, DatabaseEntity {
     id: string,
     name: string,
     description: string = '',
+    createdBy: string = 'system',
     createdAt: Date = new Date(),
     updatedAt: Date = new Date()
   ) {
     this.id = id;
     this.name = name;
     this.description = description;
+    this.createdBy = createdBy;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.members = [];
     this.expenses = [];
+    this.totalExpenses = 0;
+    this.memberCount = 0;
   }
 
   /**
@@ -75,6 +82,7 @@ export class Group implements GroupType, DatabaseEntity {
       };
 
       this.members.push(newMember);
+      this.memberCount = this.members.length;
       this.updatedAt = new Date();
     }
   }
@@ -90,6 +98,7 @@ export class Group implements GroupType, DatabaseEntity {
     this.members = this.members.filter(m => m.id !== memberId);
 
     if (this.members.length < initialLength) {
+      this.memberCount = this.members.length;
       this.updatedAt = new Date();
       return true;
     }
@@ -110,6 +119,7 @@ export class Group implements GroupType, DatabaseEntity {
     }
 
     this.expenses.push(expense);
+    this.totalExpenses = this.getTotalExpenses();
     this.updatedAt = new Date();
   }
 
@@ -124,6 +134,7 @@ export class Group implements GroupType, DatabaseEntity {
     this.expenses = this.expenses.filter(expense => expense.id !== expenseId);
 
     if (this.expenses.length < initialLength) {
+      this.totalExpenses = this.getTotalExpenses();
       this.updatedAt = new Date();
       return true;
     }

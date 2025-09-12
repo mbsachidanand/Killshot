@@ -142,7 +142,7 @@ export class Expense implements ExpenseType, DatabaseEntity {
       userId: participant.id,
       amount: Math.round(amountPerPerson * 100) / 100, // Round to 2 decimal places
       isPaid: false,
-      paidAt: undefined as Date | undefined
+      paidAt: undefined
     }));
 
     this.updatedAt = new Date();
@@ -355,17 +355,17 @@ export class Expense implements ExpenseType, DatabaseEntity {
     }
 
     return new Expense({
-      id: data.id,
+      id: data.id || undefined,
       title: data.title,
       amount: data.amount,
       paidBy: data.paidBy,
       groupId: data.groupId,
       splitType: data.splitType || 'equal',
       splits: data.splits || [],
-      date: data.date,
-      description: data.description,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt
+      date: data.date || undefined,
+      description: data.description || undefined,
+      createdAt: data.createdAt || undefined,
+      updatedAt: data.updatedAt || undefined
     });
   }
 

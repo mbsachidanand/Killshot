@@ -78,7 +78,7 @@ export interface SplitDetail {
   userId: string;
   amount: number;
   isPaid: boolean;
-  paidAt?: Date;
+  paidAt?: Date | undefined;
 }
 
 /**

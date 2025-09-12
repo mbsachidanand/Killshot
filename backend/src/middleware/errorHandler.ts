@@ -143,7 +143,7 @@ export const errorHandler = (
   const errorResponse: ErrorResponse = {
     success: false,
     error: message,
-    details,
+    details: details || [],
     timestamp: new Date().toISOString(),
     requestId: (req as any).id
   };

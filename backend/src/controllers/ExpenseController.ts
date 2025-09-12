@@ -10,6 +10,7 @@ import { ExpenseService } from '@/services/ExpenseService';
 import {
     ApiResponse,
     CreateExpenseRequest,
+    Expense,
     ExpenseResponse,
     ExpensesResponse,
     PaginationParams,
@@ -55,7 +56,7 @@ export class ExpenseController {
       const safePage = pagination.page || 1;
       const safeLimit = pagination.limit || 10;
 
-      let expenses;
+      let expenses: Expense[];
 
       // Filter by group ID
       if (groupId) {

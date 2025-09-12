@@ -5,6 +5,7 @@
  * @fileoverview TypeScript implementation of validation middleware
  */
 
+import { ValidationError } from '@/types';
 import { NextFunction, Request, Response } from 'express';
 import { ValidationChain, body, param, query, validationResult } from 'express-validator';
 import { createValidationError } from './errorHandler';
@@ -334,7 +335,7 @@ export const dateRangeValidation = validateQuery([
     .isISO8601()
     .withMessage('End date must be a valid ISO 8601 date')
     .custom((endDate: string, { req }) => {
-      const startDate = req.query.startDate as string;
+      const startDate = req.query?.startDate as string;
       if (startDate && endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
