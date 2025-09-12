@@ -38,6 +38,14 @@ struct ContentView: View {
                 }
                 .onChange(of: groupService.groups) { oldGroups, newGroups in
                     print("🔄 ContentView: Groups updated, count: \(newGroups.count)")
+                    
+                    // If we have a pending navigation, find the updated group and navigate
+                    if let pendingGroup = selectedGroupForDetails {
+                        if let updatedGroup = newGroups.first(where: { $0.id == pendingGroup.id }) {
+                            print("🔄 ContentView: Found updated group for navigation: \(updatedGroup.name)")
+                            selectedGroupForDetails = updatedGroup
+                        }
+                    }
                 }
         }
         #if os(iOS)
@@ -49,11 +57,13 @@ struct ContentView: View {
                 if let group = group {
                     print("🔄 ContentView: Setting up navigation to group: \(group.name)")
                     print("🔄 ContentView: Group ID: \(group.id)")
+                    
+                    // Set up navigation immediately
                     selectedGroupForDetails = group
                     showSuccessAlert = true
                     print("🔄 ContentView: selectedGroupForDetails set to: \(group.name)")
                     
-                    // Refresh groups after setting up navigation
+                    // Refresh groups in background
                     groupService.refreshGroups()
                 } else {
                     print("🔄 ContentView: No group provided, not navigating")
@@ -71,11 +81,13 @@ struct ContentView: View {
                 if let group = group {
                     print("🔄 ContentView: Setting up navigation to group: \(group.name)")
                     print("🔄 ContentView: Group ID: \(group.id)")
+                    
+                    // Set up navigation immediately
                     selectedGroupForDetails = group
                     showSuccessAlert = true
                     print("🔄 ContentView: selectedGroupForDetails set to: \(group.name)")
                     
-                    // Refresh groups after setting up navigation
+                    // Refresh groups in background
                     groupService.refreshGroups()
                 } else {
                     print("🔄 ContentView: No group provided, not navigating")
