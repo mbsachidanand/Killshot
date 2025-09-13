@@ -141,6 +141,7 @@ export class Expense implements ExpenseType, DatabaseEntity {
       expenseId: this.id,
       userId: participant.id,
       amount: Math.round(amountPerPerson * 100) / 100, // Round to 2 decimal places
+      percentage: Math.round(percentagePerPerson * 100) / 100, // Round to 2 decimal places
       isPaid: false,
       paidAt: undefined
     }));
@@ -156,7 +157,7 @@ export class Expense implements ExpenseType, DatabaseEntity {
    * @returns {SplitDetail[]} Array of split details
    * @throws {Error} If split amounts don't match expense amount
    */
-  public setExactSplit(splitDetails: { userId: string; amount: number }[]): SplitDetail[] {
+  public setExactSplit(splitDetails: { userId: string; amount: number; percentage: number }[]): SplitDetail[] {
     if (!splitDetails || !Array.isArray(splitDetails)) {
       throw new Error('Split details must be an array');
     }
@@ -172,6 +173,7 @@ export class Expense implements ExpenseType, DatabaseEntity {
       expenseId: this.id,
       userId: split.userId,
       amount: parseFloat(split.amount.toString()),
+      percentage: parseFloat(split.percentage.toString()),
       isPaid: false,
       paidAt: undefined
     }));
@@ -203,6 +205,7 @@ export class Expense implements ExpenseType, DatabaseEntity {
       expenseId: this.id,
       userId: split.userId,
       amount: Math.round((this.amount * parseFloat(split.percentage.toString()) / 100) * 100) / 100,
+      percentage: parseFloat(split.percentage.toString()),
       isPaid: false,
       paidAt: undefined
     }));

@@ -3,17 +3,70 @@
  * Handles business logic for expense operations using database
  */
 
-const { DatabaseFactory } = require('../database/DatabaseFactory');
+import { DatabaseFactory } from '../database/DatabaseFactory';
+import { DatabaseAdapter } from '../database/abstract/DatabaseAdapter';
+import { Expense, SplitDetail } from '../types';
 
-class ExpenseServiceDB {
-  constructor() {
-    this.db = null;
-  }
+interface ExpenseData {
+  id: string;
+  title: string;
+  amount: number;
+  paid_by: string;
+  group_id: string;
+  split_type: string;
+  date: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CreateExpenseData {
+  title: string;
+  amount: number;
+  paidBy: string;
+  groupId: string;
+  splitType?: string;
+  date?: string;
+  description?: string;
+  splitDetails?: SplitDetail[];
+}
+
+interface UpdateExpenseData {
+  title?: string;
+  amount?: number;
+  paidBy?: string;
+  splitType?: string;
+  date?: string;
+  description?: string;
+  splitDetails?: SplitDetail[];
+}
+
+interface SplitData {
+  userId: string;
+  userName: string;
+  amount: number;
+  percentage: number;
+}
+
+interface GroupStats {
+  totalAmount: number;
+  expenseCount: number;
+  balances: Record<string, number>;
+  expenses: Expense[];
+}
+
+interface Participant {
+  id: string;
+  name: string;
+}
+
+export class ExpenseServiceDB {
+  private db: DatabaseAdapter | null = null;
 
   /**
    * Initialize database connection
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     if (!this.db) {
       const factory = DatabaseFactory.getInstance();
       this.db = factory.getDefaultAdapter();
@@ -24,7 +77,7 @@ class ExpenseServiceDB {
   /**
    * Create a new expense
    */
-  async createExpense(expenseData) {
+  async createExpense(expenseData: CreateExpenseData): Promise<Expense> {
     try {
       await this.initialize();
 
@@ -46,10 +99,10 @@ class ExpenseServiceDB {
       `;
 
       const now = new Date().toISOString();
-      const expense = await this.db.query(expenseQuery, [
+      const expense = await this.db!.query(expenseQuery, [
         expenseId,
         title.trim(),
-        parseFloat(amount),
+        parseFloat(amount.toString()),
         paidBy,
         groupId,
         splitType || 'equal',
@@ -66,25 +119,25 @@ class ExpenseServiceDB {
             INSERT INTO expense_splits (expense_id, member_id, amount, percentage)
             VALUES ($1, $2, $3, $4)
           `;
-          await this.db.query(splitQuery, [
+          await this.db!.query(splitQuery, [
             expenseId,
             split.userId,
-            parseFloat(split.amount),
-            parseFloat(split.percentage)
+            parseFloat(split.amount.toString()),
+            parseFloat(split.percentage.toString())
           ]);
         }
       }
 
       return await this.getExpenseById(expenseId);
     } catch (error) {
-      throw new Error(`Failed to create expense: ${error.message}`);
+      throw new Error(`Failed to create expense: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
    * Get all expenses
    */
-  async getAllExpenses() {
+  async getAllExpenses(): Promise<Expense[]> {
     try {
       await this.initialize();
 
@@ -104,23 +157,24 @@ class ExpenseServiceDB {
         ORDER BY e.created_at DESC
       `;
 
-      const expenses = await this.db.getMany(expensesQuery);
+      const result = await this.db!.query(expensesQuery);
+      const expenses = result.rows || [];
 
       // Get split details for each expense
       for (const expense of expenses) {
         expense.splitDetails = await this.getExpenseSplits(expense.id);
       }
 
-      return expenses;
+      return expenses as Expense[];
     } catch (error) {
-      throw new Error(`Failed to fetch expenses: ${error.message}`);
+      throw new Error(`Failed to fetch expenses: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
    * Get expenses by group ID
    */
-  async getExpensesByGroup(groupId) {
+  async getExpensesByGroup(groupId: string): Promise<Expense[]> {
     try {
       await this.initialize();
 
@@ -141,23 +195,24 @@ class ExpenseServiceDB {
         ORDER BY e.created_at DESC
       `;
 
-      const expenses = await this.db.getMany(expensesQuery, [groupId]);
+      const result = await this.db!.query(expensesQuery, [groupId]);
+      const expenses = result.rows || [];
 
       // Get split details for each expense
       for (const expense of expenses) {
         expense.splitDetails = await this.getExpenseSplits(expense.id);
       }
 
-      return expenses;
+      return expenses as Expense[];
     } catch (error) {
-      throw new Error(`Failed to fetch group expenses: ${error.message}`);
+      throw new Error(`Failed to fetch group expenses: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
    * Get expense by ID
    */
-  async getExpenseById(expenseId) {
+  async getExpenseById(expenseId: string): Promise<Expense> {
     try {
       await this.initialize();
 
@@ -177,7 +232,7 @@ class ExpenseServiceDB {
         WHERE e.id = $1
       `;
 
-      const result = await this.db.query(expenseQuery, [expenseId]);
+      const result = await this.db!.query(expenseQuery, [expenseId]);
       const expenseData = result.rows && result.rows.length > 0 ? result.rows[0] : null;
       if (!expenseData) {
         throw new Error(`Expense with ID ${expenseId} not found`);
@@ -186,32 +241,31 @@ class ExpenseServiceDB {
       // Get split details
       const splitDetails = await this.getExpenseSplits(expenseId);
 
-      // Create Expense model instance
-      const { Expense } = require('../models/Expense');
-      const expense = new Expense({
+      // Create Expense object
+      const expense: Expense = {
         id: expenseData.id,
         title: expenseData.title,
-        amount: parseFloat(expenseData.amount),
+        amount: parseFloat(expenseData.amount.toString()),
         paidBy: expenseData.paid_by,
         groupId: expenseData.group_id,
         splitType: expenseData.split_type,
-        splitDetails: splitDetails,
+        splits: splitDetails,
         date: expenseData.date,
         description: expenseData.description,
         createdAt: expenseData.created_at,
         updatedAt: expenseData.updated_at
-      });
+      };
 
       return expense;
     } catch (error) {
-      throw new Error(`Failed to fetch expense: ${error.message}`);
+      throw new Error(`Failed to fetch expense: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
    * Get expense splits
    */
-  async getExpenseSplits(expenseId) {
+  async getExpenseSplits(expenseId: string): Promise<SplitDetail[]> {
     try {
       await this.initialize();
 
@@ -227,17 +281,17 @@ class ExpenseServiceDB {
         ORDER BY es.amount DESC
       `;
 
-      const result = await this.db.query(splitsQuery, [expenseId]);
+      const result = await this.db!.query(splitsQuery, [expenseId]);
       return result.rows || [];
     } catch (error) {
-      throw new Error(`Failed to fetch expense splits: ${error.message}`);
+      throw new Error(`Failed to fetch expense splits: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
    * Update an expense
    */
-  async updateExpense(expenseId, updateData) {
+  async updateExpense(expenseId: string, updateData: UpdateExpenseData): Promise<Expense> {
     try {
       await this.initialize();
 
@@ -249,17 +303,49 @@ class ExpenseServiceDB {
         throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
       }
 
-      const updateFields = {};
-      if (title !== undefined) updateFields.title = title.trim();
-      if (amount !== undefined) updateFields.amount = parseFloat(amount);
-      if (paidBy !== undefined) updateFields.paid_by = paidBy;
-      if (splitType !== undefined) updateFields.split_type = splitType;
-      if (date !== undefined) updateFields.date = date;
-      if (description !== undefined) updateFields.description = description;
+      const updateFields: string[] = [];
+      const values: any[] = [];
+      let paramCount = 1;
 
-      if (Object.keys(updateFields).length > 0) {
-        const updatedExpense = await this.db.update('expenses', updateFields, { id: expenseId });
-        if (!updatedExpense) {
+      if (title !== undefined) {
+        updateFields.push(`title = $${paramCount++}`);
+        values.push(title.trim());
+      }
+      if (amount !== undefined) {
+        updateFields.push(`amount = $${paramCount++}`);
+        values.push(parseFloat(amount.toString()));
+      }
+      if (paidBy !== undefined) {
+        updateFields.push(`paid_by = $${paramCount++}`);
+        values.push(paidBy);
+      }
+      if (splitType !== undefined) {
+        updateFields.push(`split_type = $${paramCount++}`);
+        values.push(splitType);
+      }
+      if (date !== undefined) {
+        updateFields.push(`date = $${paramCount++}`);
+        values.push(date);
+      }
+      if (description !== undefined) {
+        updateFields.push(`description = $${paramCount++}`);
+        values.push(description);
+      }
+
+      if (updateFields.length > 0) {
+        updateFields.push(`updated_at = $${paramCount++}`);
+        values.push(new Date().toISOString());
+        values.push(expenseId);
+
+        const updateQuery = `
+          UPDATE expenses 
+          SET ${updateFields.join(', ')}
+          WHERE id = $${paramCount}
+          RETURNING *
+        `;
+
+        const result = await this.db!.query(updateQuery, values);
+        if (!result.rows || result.rows.length === 0) {
           throw new Error(`Expense with ID ${expenseId} not found`);
         }
       }
@@ -267,47 +353,51 @@ class ExpenseServiceDB {
       // Update splits if provided
       if (splitDetails && splitDetails.length > 0) {
         // Delete existing splits
-        await this.db.query('DELETE FROM expense_splits WHERE expense_id = $1', [expenseId]);
+        await this.db!.query('DELETE FROM expense_splits WHERE expense_id = $1', [expenseId]);
 
         // Insert new splits
         for (const split of splitDetails) {
-          await this.db.insert('expense_splits', {
-            expense_id: expenseId,
-            member_id: split.userId,
-            amount: parseFloat(split.amount),
-            percentage: parseFloat(split.percentage)
-          });
+          const splitQuery = `
+            INSERT INTO expense_splits (expense_id, member_id, amount, percentage)
+            VALUES ($1, $2, $3, $4)
+          `;
+          await this.db!.query(splitQuery, [
+            expenseId,
+            split.userId,
+            parseFloat(split.amount.toString()),
+            parseFloat(split.percentage.toString())
+          ]);
         }
       }
 
       return await this.getExpenseById(expenseId);
     } catch (error) {
-      throw new Error(`Failed to update expense: ${error.message}`);
+      throw new Error(`Failed to update expense: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
    * Delete an expense
    */
-  async deleteExpense(expenseId) {
+  async deleteExpense(expenseId: string): Promise<Expense> {
     try {
       await this.initialize();
 
       const expense = await this.getExpenseById(expenseId);
 
       // Delete expense (splits will be deleted due to CASCADE)
-      await this.db.delete('expenses', { id: expenseId });
+      await this.db!.query('DELETE FROM expenses WHERE id = $1', [expenseId]);
 
       return expense;
     } catch (error) {
-      throw new Error(`Failed to delete expense: ${error.message}`);
+      throw new Error(`Failed to delete expense: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
    * Get expenses by user ID
    */
-  async getExpensesByUser(userId) {
+  async getExpensesByUser(userId: string): Promise<Expense[]> {
     try {
       await this.initialize();
 
@@ -329,23 +419,24 @@ class ExpenseServiceDB {
         ORDER BY e.created_at DESC
       `;
 
-      const expenses = await this.db.getMany(expensesQuery, [userId]);
+      const result = await this.db!.query(expensesQuery, [userId]);
+      const expenses = result.rows || [];
 
       // Get split details for each expense
       for (const expense of expenses) {
         expense.splitDetails = await this.getExpenseSplits(expense.id);
       }
 
-      return expenses;
+      return expenses as Expense[];
     } catch (error) {
-      throw new Error(`Failed to fetch user expenses: ${error.message}`);
+      throw new Error(`Failed to fetch user expenses: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
    * Get expense statistics for a group
    */
-  async getGroupExpenseStats(groupId) {
+  async getGroupExpenseStats(groupId: string): Promise<GroupStats> {
     try {
       await this.initialize();
 
@@ -357,7 +448,8 @@ class ExpenseServiceDB {
         WHERE group_id = $1
       `;
 
-      const stats = await this.db.getOne(statsQuery, [groupId]);
+      const statsResult = await this.db!.query(statsQuery, [groupId]);
+      const stats = statsResult.rows && statsResult.rows.length > 0 ? statsResult.rows[0] : { expense_count: 0, total_amount: 0 };
 
       // Calculate balances
       const balancesQuery = `
@@ -379,11 +471,12 @@ class ExpenseServiceDB {
         GROUP BY m.id, m.name
       `;
 
-      const balances = await this.db.getMany(balancesQuery, [groupId]);
+      const balancesResult = await this.db!.query(balancesQuery, [groupId]);
+      const balances = balancesResult.rows || [];
 
       // Calculate net balance for each user
-      const userBalances = {};
-      balances.forEach(balance => {
+      const userBalances: Record<string, number> = {};
+      balances.forEach((balance: any) => {
         userBalances[balance.user_id] = balance.paid_amount - balance.owed_amount;
       });
 
@@ -391,20 +484,20 @@ class ExpenseServiceDB {
       const expenses = await this.getExpensesByGroup(groupId);
 
       return {
-        totalAmount: parseFloat(stats.total_amount),
-        expenseCount: parseInt(stats.expense_count),
+        totalAmount: parseFloat(stats.total_amount.toString()),
+        expenseCount: parseInt(stats.expense_count.toString()),
         balances: userBalances,
         expenses: expenses
       };
     } catch (error) {
-      throw new Error(`Failed to get group expense stats: ${error.message}`);
+      throw new Error(`Failed to get group expense stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
    * Calculate equal split for a group
    */
-  async calculateEqualSplit(groupId, amount, participants) {
+  async calculateEqualSplit(groupId: string, amount: number, participants: Participant[]): Promise<SplitData[]> {
     try {
       await this.initialize();
 
@@ -421,21 +514,97 @@ class ExpenseServiceDB {
         percentage: Math.round((100 / participants.length) * 100) / 100
       }));
     } catch (error) {
-      throw new Error(`Failed to calculate equal split: ${error.message}`);
+      throw new Error(`Failed to calculate equal split: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Search expenses by title or description
+   */
+  async searchExpenses(query: string): Promise<Expense[]> {
+    try {
+      await this.initialize();
+
+      const searchQuery = `
+        SELECT
+          e.id,
+          e.title,
+          e.amount,
+          e.paid_by,
+          e.group_id,
+          e.split_type,
+          e.date,
+          e.description,
+          e.created_at,
+          e.updated_at
+        FROM expenses e
+        WHERE e.title ILIKE $1 OR e.description ILIKE $1
+        ORDER BY e.created_at DESC
+      `;
+
+      const result = await this.db!.query(searchQuery, [`%${query}%`]);
+      const expenses = result.rows || [];
+
+      // Get split details for each expense
+      for (const expense of expenses) {
+        expense.splitDetails = await this.getExpenseSplits(expense.id);
+      }
+
+      return expenses as Expense[];
+    } catch (error) {
+      throw new Error(`Failed to search expenses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get expenses by date range
+   */
+  async getExpensesByDateRange(startDate: string, endDate: string): Promise<Expense[]> {
+    try {
+      await this.initialize();
+
+      const expensesQuery = `
+        SELECT
+          e.id,
+          e.title,
+          e.amount,
+          e.paid_by,
+          e.group_id,
+          e.split_type,
+          e.date,
+          e.description,
+          e.created_at,
+          e.updated_at
+        FROM expenses e
+        WHERE e.date >= $1 AND e.date <= $2
+        ORDER BY e.created_at DESC
+      `;
+
+      const result = await this.db!.query(expensesQuery, [startDate, endDate]);
+      const expenses = result.rows || [];
+
+      // Get split details for each expense
+      for (const expense of expenses) {
+        expense.splitDetails = await this.getExpenseSplits(expense.id);
+      }
+
+      return expenses as Expense[];
+    } catch (error) {
+      throw new Error(`Failed to fetch expenses by date range: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
    * Validate expense data
    */
-  validateExpenseData(expenseData) {
-    const errors = [];
+  validateExpenseData(expenseData: Partial<CreateExpenseData>): string[] {
+    const errors: string[] = [];
 
     if (expenseData.title !== undefined && (!expenseData.title || expenseData.title.trim() === '')) {
       errors.push('Title is required');
     }
 
-    if (expenseData.amount !== undefined && (!expenseData.amount || isNaN(expenseData.amount) || parseFloat(expenseData.amount) <= 0)) {
+    if (expenseData.amount !== undefined && (!expenseData.amount || isNaN(expenseData.amount) || parseFloat(expenseData.amount.toString()) <= 0)) {
       errors.push('Amount must be a positive number');
     }
 
@@ -455,4 +624,4 @@ class ExpenseServiceDB {
   }
 }
 
-module.exports = ExpenseServiceDB;
+export default ExpenseServiceDB;

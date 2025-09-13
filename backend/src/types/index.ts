@@ -77,6 +77,7 @@ export interface SplitDetail {
   expenseId: string;
   userId: string;
   amount: number;
+  percentage: number;
   isPaid: boolean;
   paidAt?: Date | undefined;
 }
@@ -112,6 +113,11 @@ export interface Group {
   expenses: Expense[];
   totalExpenses: number;
   memberCount: number;
+}
+
+export interface GroupDetail extends Group {
+  // GroupDetail is the same as Group for now
+  // Can be extended with additional fields if needed
 }
 
 // ============================================================================

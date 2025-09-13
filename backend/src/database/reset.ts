@@ -3,11 +3,15 @@
  * Drops all tables and recreates them with fresh data
  */
 
-const databaseFactory = require('./DatabaseFactory');
-const MigrationRunner = require('./migrate');
-const DatabaseSeeder = require('./seed');
+import { DatabaseFactory } from './DatabaseFactory';
+import { DatabaseAdapter } from './abstract/DatabaseAdapter';
+import MigrationRunner from './migrate';
+import DatabaseSeeder from './seed';
 
 class DatabaseReset {
+  private migrationRunner: MigrationRunner;
+  private seeder: DatabaseSeeder;
+
   constructor() {
     this.migrationRunner = new MigrationRunner();
     this.seeder = new DatabaseSeeder();
@@ -16,7 +20,7 @@ class DatabaseReset {
   /**
    * Drop all tables
    */
-  async dropAllTables(db) {
+  private async dropAllTables(db: DatabaseAdapter): Promise<void> {
     console.log('🗑️  Dropping all tables...');
     
     const tables = [
@@ -33,7 +37,7 @@ class DatabaseReset {
         await db.query(`DROP TABLE IF EXISTS ${table} CASCADE`);
         console.log(`✅ Dropped table: ${table}`);
       } catch (error) {
-        console.log(`⚠️  Could not drop table ${table}: ${error.message}`);
+        console.log(`⚠️  Could not drop table ${table}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
   }
@@ -41,11 +45,13 @@ class DatabaseReset {
   /**
    * Reset the entire database
    */
-  async reset() {
+  async reset(): Promise<void> {
     console.log('🔄 Starting database reset...');
     
     try {
-      const db = await databaseFactory.getAdapter();
+      const factory = DatabaseFactory.getInstance();
+      const db = factory.getDefaultAdapter();
+      await db.connect();
       
       // Drop all tables
       await this.dropAllTables(db);
@@ -53,17 +59,19 @@ class DatabaseReset {
       console.log('✅ Database reset completed');
       
     } catch (error) {
-      console.error('❌ Database reset failed:', error.message);
+      console.error('❌ Database reset failed:', error instanceof Error ? error.message : 'Unknown error');
       process.exit(1);
     } finally {
-      await databaseFactory.disconnect();
+      const factory = DatabaseFactory.getInstance();
+      const db = factory.getDefaultAdapter();
+      await db.disconnect();
     }
   }
 
   /**
    * Reset and rebuild the database
    */
-  async resetAndRebuild() {
+  async resetAndRebuild(): Promise<void> {
     console.log('🔄 Starting complete database reset and rebuild...');
     
     try {
@@ -71,7 +79,7 @@ class DatabaseReset {
       await this.reset();
       
       // Run migrations
-      await this.migrationRunner.runMigrations();
+      await this.migrationRunner.migrate();
       
       // Seed data
       await this.seeder.seed();
@@ -79,7 +87,7 @@ class DatabaseReset {
       console.log('🎉 Database reset and rebuild completed successfully!');
       
     } catch (error) {
-      console.error('❌ Database reset and rebuild failed:', error.message);
+      console.error('❌ Database reset and rebuild failed:', error instanceof Error ? error.message : 'Unknown error');
       process.exit(1);
     }
   }
@@ -91,10 +99,26 @@ if (require.main === module) {
   
   const args = process.argv.slice(2);
   if (args.includes('--rebuild')) {
-    reset.resetAndRebuild();
+    reset.resetAndRebuild()
+      .then(() => {
+        console.log('🎉 Reset and rebuild process completed!');
+        process.exit(0);
+      })
+      .catch((error) => {
+        console.error('💥 Reset and rebuild process failed:', error);
+        process.exit(1);
+      });
   } else {
-    reset.reset();
+    reset.reset()
+      .then(() => {
+        console.log('🎉 Reset process completed!');
+        process.exit(0);
+      })
+      .catch((error) => {
+        console.error('💥 Reset process failed:', error);
+        process.exit(1);
+      });
   }
 }
 
-module.exports = DatabaseReset;
+export default DatabaseReset;

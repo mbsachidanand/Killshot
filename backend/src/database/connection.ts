@@ -3,22 +3,27 @@
  * Provides a unified interface for database operations across different database types
  */
 
-const { Pool } = require('pg');
-const { getDbConfig, validateConfig } = require('./config');
+import { Pool, PoolClient, QueryResult } from 'pg';
+import { getDbConfig, validateDbConfig } from './config';
+
+interface HealthStatus {
+  status: 'connected' | 'disconnected' | 'error';
+  message: string;
+  currentTime?: string;
+}
 
 class DatabaseConnection {
-  constructor() {
-    this.pool = null;
-    this.isConnected = false;
-  }
+  private pool: Pool | null = null;
+  private isConnected: boolean = false;
 
   /**
    * Initialize database connection
    */
-  async connect() {
+  async connect(): Promise<void> {
     try {
-      validateConfig();
-      const { type, config } = getDbConfig();
+      const dbConfig = getDbConfig();
+      validateDbConfig(dbConfig);
+      const { type, ...config } = dbConfig;
       
       if (type === 'postgresql') {
         this.pool = new Pool(config);
@@ -34,7 +39,7 @@ class DatabaseConnection {
         throw new Error(`Database type ${type} not yet implemented`);
       }
     } catch (error) {
-      console.error('❌ Database connection failed:', error.message);
+      console.error('❌ Database connection failed:', error instanceof Error ? error.message : 'Unknown error');
       throw error;
     }
   }
@@ -42,8 +47,8 @@ class DatabaseConnection {
   /**
    * Get a client from the pool
    */
-  async getClient() {
-    if (!this.isConnected) {
+  async getClient(): Promise<PoolClient> {
+    if (!this.isConnected || !this.pool) {
       throw new Error('Database not connected. Call connect() first.');
     }
     return await this.pool.connect();
@@ -52,8 +57,8 @@ class DatabaseConnection {
   /**
    * Execute a query with parameters
    */
-  async query(text, params = []) {
-    if (!this.isConnected) {
+  async query(text: string, params: any[] = []): Promise<QueryResult> {
+    if (!this.isConnected || !this.pool) {
       throw new Error('Database not connected. Call connect() first.');
     }
     
@@ -64,7 +69,7 @@ class DatabaseConnection {
       console.log('📊 Query executed:', { text, duration, rows: result.rowCount });
       return result;
     } catch (error) {
-      console.error('❌ Query failed:', { text, error: error.message });
+      console.error('❌ Query failed:', { text, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -72,8 +77,8 @@ class DatabaseConnection {
   /**
    * Execute a transaction
    */
-  async transaction(callback) {
-    if (!this.isConnected) {
+  async transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
+    if (!this.isConnected || !this.pool) {
       throw new Error('Database not connected. Call connect() first.');
     }
 
@@ -94,7 +99,7 @@ class DatabaseConnection {
   /**
    * Close the database connection
    */
-  async close() {
+  async close(): Promise<void> {
     if (this.pool) {
       await this.pool.end();
       this.isConnected = false;
@@ -105,14 +110,14 @@ class DatabaseConnection {
   /**
    * Check if database is connected
    */
-  isConnected() {
+  getConnectionStatus(): boolean {
     return this.isConnected;
   }
 
   /**
    * Get database health status
    */
-  async getHealthStatus() {
+  async getHealthStatus(): Promise<HealthStatus> {
     try {
       if (!this.isConnected) {
         return { status: 'disconnected', message: 'Database not connected' };
@@ -127,7 +132,7 @@ class DatabaseConnection {
     } catch (error) {
       return {
         status: 'error',
-        message: error.message
+        message: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -136,4 +141,4 @@ class DatabaseConnection {
 // Create a singleton instance
 const dbConnection = new DatabaseConnection();
 
-module.exports = dbConnection;
+export default dbConnection;

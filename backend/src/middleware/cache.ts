@@ -3,7 +3,26 @@
  * Simple in-memory caching for frequently accessed data
  */
 
+import { Request, Response, NextFunction } from 'express';
+
+interface CacheEntry {
+  value: any;
+  expiry: number;
+}
+
+interface CacheStats {
+  totalEntries: number;
+  validEntries: number;
+  expiredEntries: number;
+  memoryUsage: number;
+}
+
+type KeyGenerator = (req: Request) => string;
+
 class CacheManager {
+  private cache: Map<string, CacheEntry>;
+  private defaultTTL: number;
+
   constructor() {
     this.cache = new Map();
     this.defaultTTL = 5 * 60 * 1000; // 5 minutes
@@ -11,21 +30,21 @@ class CacheManager {
 
   /**
    * Set cache entry
-   * @param {string} key - Cache key
-   * @param {any} value - Value to cache
-   * @param {number} ttl - Time to live in milliseconds
+   * @param key - Cache key
+   * @param value - Value to cache
+   * @param ttl - Time to live in milliseconds
    */
-  set(key, value, ttl = this.defaultTTL) {
+  set(key: string, value: any, ttl: number = this.defaultTTL): void {
     const expiry = Date.now() + ttl;
     this.cache.set(key, { value, expiry });
   }
 
   /**
    * Get cache entry
-   * @param {string} key - Cache key
-   * @returns {any|null} - Cached value or null if expired/not found
+   * @param key - Cache key
+   * @returns Cached value or null if expired/not found
    */
-  get(key) {
+  get(key: string): any | null {
     const entry = this.cache.get(key);
     
     if (!entry) {
@@ -42,24 +61,24 @@ class CacheManager {
 
   /**
    * Delete cache entry
-   * @param {string} key - Cache key
+   * @param key - Cache key
    */
-  delete(key) {
+  delete(key: string): void {
     this.cache.delete(key);
   }
 
   /**
    * Clear all cache entries
    */
-  clear() {
+  clear(): void {
     this.cache.clear();
   }
 
   /**
    * Get cache statistics
-   * @returns {Object} - Cache statistics
+   * @returns Cache statistics
    */
-  getStats() {
+  getStats(): CacheStats {
     const now = Date.now();
     let validEntries = 0;
     let expiredEntries = 0;
@@ -87,24 +106,25 @@ const cacheManager = new CacheManager();
 
 /**
  * Cache middleware factory
- * @param {string} keyGenerator - Function to generate cache key from request
- * @param {number} ttl - Time to live in milliseconds
- * @returns {Function} - Express middleware
+ * @param keyGenerator - Function to generate cache key from request
+ * @param ttl - Time to live in milliseconds
+ * @returns Express middleware
  */
-const cacheMiddleware = (keyGenerator, ttl = 5 * 60 * 1000) => {
-  return (req, res, next) => {
+const cacheMiddleware = (keyGenerator: KeyGenerator, ttl: number = 5 * 60 * 1000) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const key = keyGenerator(req);
     const cached = cacheManager.get(key);
     
     if (cached) {
-      return res.json(cached);
+      res.json(cached);
+      return;
     }
     
     // Store original json method
     const originalJson = res.json;
     
     // Override json method to cache response
-    res.json = function(data) {
+    res.json = function(data: any) {
       // Only cache successful responses
       if (res.statusCode >= 200 && res.statusCode < 300) {
         cacheManager.set(key, data, ttl);
@@ -118,11 +138,11 @@ const cacheMiddleware = (keyGenerator, ttl = 5 * 60 * 1000) => {
 
 /**
  * Invalidate cache entries by pattern
- * @param {string} pattern - Pattern to match cache keys
+ * @param pattern - Pattern to match cache keys
  */
-const invalidateCache = (pattern) => {
+const invalidateCache = (pattern: string): void => {
   const regex = new RegExp(pattern);
-  for (const key of cacheManager.cache.keys()) {
+  for (const key of (cacheManager as any).cache.keys()) {
     if (regex.test(key)) {
       cacheManager.delete(key);
     }
@@ -133,13 +153,20 @@ const invalidateCache = (pattern) => {
  * Cache key generators
  */
 const cacheKeys = {
-  groups: (req) => `groups:${req.query.page || 1}:${req.query.limit || 100}`,
-  groupById: (req) => `group:${req.params.id}`,
-  expenses: (req) => `expenses:${req.query.groupId || 'all'}:${req.query.page || 1}`,
-  expenseById: (req) => `expense:${req.params.id}`
+  groups: (req: Request): string => `groups:${req.query.page || 1}:${req.query.limit || 100}`,
+  groupById: (req: Request): string => `group:${req.params.id}`,
+  expenses: (req: Request): string => `expenses:${req.query.groupId || 'all'}:${req.query.page || 1}`,
+  expenseById: (req: Request): string => `expense:${req.params.id}`
 };
 
-module.exports = {
+export {
+  cacheManager,
+  cacheMiddleware,
+  invalidateCache,
+  cacheKeys
+};
+
+export default {
   cacheManager,
   cacheMiddleware,
   invalidateCache,

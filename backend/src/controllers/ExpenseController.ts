@@ -16,7 +16,7 @@ import {
     PaginationParams,
     UpdateExpenseRequest
 } from '../types';
-const ExpenseServiceDB = require('../services/ExpenseServiceDB');
+import ExpenseServiceDB from '../services/ExpenseServiceDB';
 
 /**
  * Expense Controller Class
@@ -25,7 +25,7 @@ const ExpenseServiceDB = require('../services/ExpenseServiceDB');
  * It provides methods for CRUD operations and expense management.
  */
 export class ExpenseController {
-  private expenseServiceDB: any;
+  private expenseServiceDB: ExpenseServiceDB;
 
   constructor() {
     try {
@@ -73,8 +73,8 @@ export class ExpenseController {
       // Filter by date range
       else if (startDate && endDate) {
         expenses = await this.expenseServiceDB.getExpensesByDateRange(
-          new Date(startDate as string),
-          new Date(endDate as string)
+          startDate as string,
+          endDate as string
         );
       }
       // Get all expenses
@@ -557,7 +557,7 @@ export class ExpenseController {
         }]);
       }
 
-      const expenses = await this.expenseServiceDB.getExpensesByDateRange(start, end);
+      const expenses = await this.expenseServiceDB.getExpensesByDateRange(start.toISOString(), end.toISOString());
 
       const response: ExpensesResponse = {
         success: true,

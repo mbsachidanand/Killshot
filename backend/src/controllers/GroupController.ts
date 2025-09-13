@@ -15,7 +15,7 @@ import {
     UpdateGroupRequest
 } from '@/types';
 import { NextFunction, Request, Response } from 'express';
-const GroupServiceDB = require('../services/GroupServiceDB');
+import GroupServiceDB from '../services/GroupServiceDB';
 
 /**
  * Group Controller Class
@@ -24,7 +24,7 @@ const GroupServiceDB = require('../services/GroupServiceDB');
  * It provides methods for CRUD operations and group management.
  */
 export class GroupController {
-  private groupServiceDB: any;
+    private groupServiceDB: GroupServiceDB;
 
   constructor() {
     this.groupServiceDB = new GroupServiceDB();
