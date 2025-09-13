@@ -96,12 +96,13 @@ struct ContentView: View {
                 // It automatically triggers when selectedGroupForDetails is set to a non-nil value
                 .navigationDestination(item: $selectedGroupForDetails) { group in
                     // Create the GroupDetailView with the selected group
-                    print("🔄 Navigation destination triggered for group: \(group.name)")
-                    print("🔄 showSuccessAlert value: \(showSuccessAlert)")
                     GroupDetailView(group: group, showSuccessMessage: showSuccessAlert) {
                         // Callback to reset the success alert flag
-                        print("🔄 Alert dismissed, resetting showSuccessAlert")
                         showSuccessAlert = false
+                    }
+                    .onAppear {
+                        print("🔄 Navigation destination triggered for group: \(group.name)")
+                        print("🔄 showSuccessAlert value: \(showSuccessAlert)")
                     }
                     .onDisappear {
                         // Clear the selected group when we navigate away
@@ -124,7 +125,7 @@ struct ContentView: View {
                     // Set up navigation immediately with success alert
                     selectedGroupForDetails = group
                     showSuccessAlert = true
-                    
+
                     // Refresh groups in background to get updated data
                     groupService.refreshGroups()
                 } else {
@@ -143,7 +144,7 @@ struct ContentView: View {
                     // Set up navigation immediately with success alert
                     selectedGroupForDetails = group
                     showSuccessAlert = true
-                    
+
                     // Refresh groups in background to get updated data
                     groupService.refreshGroups()
                 } else {
