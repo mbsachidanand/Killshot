@@ -19,11 +19,12 @@ A modern expense splitting app built with SwiftUI and Node.js, designed to help 
 - **Services**: API communication and data management
 - **Models**: Data structures for groups, expenses, and users
 
-### Backend (Node.js + Express)
+### Backend (TypeScript + Express)
 - **RESTful API**: REST endpoints for groups and expenses
 - **PostgreSQL Database**: Reliable data storage with migrations
-- **Middleware**: Authentication, validation, error handling, and logging
-- **Services**: Business logic and database operations
+- **TypeScript**: Full type safety and modern development practices
+- **Middleware**: Validation, error handling, request ID tracking, and logging
+- **Services**: Database-backed business logic and operations
 
 ## Getting Started
 
@@ -52,7 +53,7 @@ A modern expense splitting app built with SwiftUI and Node.js, designed to help 
 
 4. Start the development server:
    ```bash
-   npm run dev
+   npm run start:dev
    ```
 
 The API will be available at `http://localhost:3001`
@@ -119,7 +120,7 @@ iOS tests:
 ### Code Style
 
 - **Swift**: Follow Swift API Design Guidelines
-- **JavaScript**: Use ESLint and Prettier
+- **TypeScript**: Use ESLint and Prettier with TypeScript rules
 - **Database**: Use snake_case for column names
 
 ## Recent Improvements
@@ -132,11 +133,12 @@ iOS tests:
 - ✅ Added unit tests for core models
 
 ### Backend
-- ✅ Environment configuration setup
-- ✅ Database migration system
-- ✅ Comprehensive error handling
+- ✅ Complete TypeScript migration with full type safety
+- ✅ Database migration system with PostgreSQL
+- ✅ Comprehensive error handling and validation
 - ✅ Request validation and sanitization
 - ✅ Rate limiting and security headers
+- ✅ Database-backed services (no in-memory storage)
 
 ## Contributing
 

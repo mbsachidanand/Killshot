@@ -29,7 +29,7 @@ struct ContentView: View {
 
     /**
      * @StateObject - Creates and manages a GroupService instance
-     * This service handles all group-related operations like fetching groups from the API
+     * This service handles all group-related operations like fetching groups from the TypeScript backend API
      * @StateObject means SwiftUI will recreate this if the view is recreated
      */
     @StateObject private var groupService = GroupService()
@@ -45,7 +45,7 @@ struct ContentView: View {
     // MARK: - User Data
     /**
      * In a real app, this would come from authentication/login
-     * For now, we're using hardcoded user data
+     * For now, we're using hardcoded user data that matches the database
      */
     private let currentUser = User(id: "1", name: "Rishab", email: "rishab@example.com")
 
@@ -76,7 +76,7 @@ struct ContentView: View {
         NavigationStack {
             mainContent
                 // onAppear is called when this view appears on screen
-                // Perfect place to load data when the view first shows
+                // Perfect place to load data from the TypeScript backend when the view first shows
                 .onAppear {
                     groupService.loadGroups()
                 }
@@ -396,7 +396,7 @@ struct ContentView: View {
                 .multilineTextAlignment(.center)  // Center-align multi-line text
 
             Button("Create Group") {
-                // TODO: Implement create group functionality
+                // TODO: Implement create group functionality (future feature)
                 // This would typically show a create group form
             }
             .font(.subheadline)
@@ -522,7 +522,7 @@ struct GroupDetailView: View {
                     .frame(maxWidth: .infinity)  // Center the empty state
                     .padding(.vertical, 40)
                 } else {
-                    // TODO: Add expense list here
+                    // TODO: Add expense list here (future enhancement)
                     // This would show a list of expenses when implemented
                     Text("Expense list will be implemented here")
                         .font(.subheadline)
@@ -570,6 +570,8 @@ struct AddExpenseView: View {
     @State private var amountError = ""
     @State private var groupError = ""
 
+    // MARK: - Services
+    // Services for API communication with TypeScript backend
     @StateObject private var groupService = GroupService()
     @StateObject private var expenseService = ExpenseService()
     @Environment(\.dismiss) private var dismiss

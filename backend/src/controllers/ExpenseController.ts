@@ -7,6 +7,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { asyncHandler, createNotFoundError, createValidationError } from '../middleware/errorHandler';
+import ExpenseServiceDB from '../services/ExpenseServiceDB';
 import {
     ApiResponse,
     CreateExpenseRequest,
@@ -16,13 +17,18 @@ import {
     PaginationParams,
     UpdateExpenseRequest
 } from '../types';
-import ExpenseServiceDB from '../services/ExpenseServiceDB';
 
 /**
  * Expense Controller Class
  *
  * This class handles all HTTP requests related to expense operations.
  * It provides methods for CRUD operations and expense management.
+ *
+ * Features:
+ * - Full TypeScript type safety
+ * - Database-backed operations (no in-memory storage)
+ * - Comprehensive error handling
+ * - Request validation and sanitization
  */
 export class ExpenseController {
   private expenseServiceDB: ExpenseServiceDB;

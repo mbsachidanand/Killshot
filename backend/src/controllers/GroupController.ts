@@ -22,6 +22,12 @@ import GroupServiceDB from '../services/GroupServiceDB';
  *
  * This class handles all HTTP requests related to group operations.
  * It provides methods for CRUD operations and group management.
+ *
+ * Features:
+ * - Full TypeScript type safety
+ * - Database-backed operations (no in-memory storage)
+ * - Comprehensive error handling
+ * - Request validation and sanitization
  */
 export class GroupController {
     private groupServiceDB: GroupServiceDB;

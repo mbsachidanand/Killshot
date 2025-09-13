@@ -1,6 +1,12 @@
 /**
  * Expense Service with Database Integration
- * Handles business logic for expense operations using database
+ * Handles business logic for expense operations using PostgreSQL database
+ *
+ * Features:
+ * - Full TypeScript type safety
+ * - Database-backed operations (replaces in-memory storage)
+ * - Comprehensive error handling
+ * - Support for complex expense splitting logic
  */
 
 import { DatabaseFactory } from '../database/DatabaseFactory';

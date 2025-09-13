@@ -34,7 +34,7 @@ protocol ExpenseServiceProtocol {
  * ExpenseService - Handles all expense-related business logic
  *
  * This class manages expense operations like creating new expenses.
- * It acts as a bridge between the UI and the API service, handling
+ * It acts as a bridge between the UI and the TypeScript backend API, handling
  * loading states, errors, and data transformation.
  *
  * @MainActor ensures all operations run on the main thread for UI updates.

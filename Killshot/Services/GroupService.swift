@@ -14,7 +14,7 @@ protocol GroupServiceProtocol {
     var groups: [Group] { get }
     var isLoading: Bool { get }
     var error: APIError? { get }
-    
+
     func loadGroups()
     func refreshGroups()
     func createGroup(name: String, description: String?)
@@ -23,36 +23,44 @@ protocol GroupServiceProtocol {
 }
 
 // MARK: - Group Service Implementation
+/**
+ * GroupService - Handles all group-related operations
+ *
+ * This service communicates with the TypeScript backend API to:
+ * - Fetch groups from the database
+ * - Create, update, and delete groups
+ * - Handle real-time updates and error states
+ */
 @MainActor
 class GroupService: ObservableObject, GroupServiceProtocol {
     @Published var groups: [Group] = []
     @Published var isLoading: Bool = false
     @Published var error: APIError? = nil
     @Published var refreshTrigger: UUID = UUID()
-    
+
     private let apiService: APIServiceProtocol
     private var cancellables = Set<AnyCancellable>()
-    
+
     // Callback for UI refresh
     var onGroupsUpdated: (() -> Void)?
-    
+
     init(apiService: APIServiceProtocol = APIService.shared) {
         self.apiService = apiService
     }
-    
+
     // MARK: - Public Methods
     func loadGroups() {
         guard !isLoading else { return }
-        
+
         isLoading = true
         error = nil
-        
+
         apiService.fetchGroups()
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     self?.isLoading = false
-                    
+
                     if case .failure(let error) = completion {
                         self?.error = error
                         print("🚨 Error loading groups: \(error.localizedDescription)")
@@ -69,35 +77,35 @@ class GroupService: ObservableObject, GroupServiceProtocol {
                         print("   - Expenses count: \(group.expenses.count)")
                         print("   - Expenses total: \(group.expenses.reduce(0) { $0 + $1.amount })")
                     }
-                    
+
                     // Update groups immediately on main thread
                     self?.groups = groups
                     print("✅ Updated groups array with \(groups.count) groups")
-                    
+
                     // Verify the data after assignment
                     for group in self?.groups ?? [] {
                         print("📊 Stored Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
                     }
-                    
+
                     // Update refresh trigger to force UI update
                     self?.refreshTrigger = UUID()
-                    
+
                     // Call the UI refresh callback
                     self?.onGroupsUpdated?()
                 }
             )
             .store(in: &cancellables)
     }
-    
+
     func refreshGroups() {
         print("🔄 Refreshing groups...")
         loadGroups()
     }
-    
+
     func refreshGroupsWithRetry(maxRetries: Int = 3) {
         print("🔄 Refreshing groups with retry mechanism...")
         loadGroups()
-        
+
         // If we still have stale data after a short delay, retry
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             // Check if we need to retry based on data freshness
@@ -108,19 +116,19 @@ class GroupService: ObservableObject, GroupServiceProtocol {
             }
         }
     }
-    
+
     func createGroup(name: String, description: String? = nil) {
         guard !isLoading else { return }
-        
+
         isLoading = true
         error = nil
-        
+
         apiService.createGroup(name: name, description: description)
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     self?.isLoading = false
-                    
+
                     if case .failure(let error) = completion {
                         self?.error = error
                         print("Error creating group: \(error.localizedDescription)")
@@ -133,19 +141,19 @@ class GroupService: ObservableObject, GroupServiceProtocol {
             )
             .store(in: &cancellables)
     }
-    
+
     func updateGroup(id: String, name: String? = nil, description: String? = nil) {
         guard !isLoading else { return }
-        
+
         isLoading = true
         error = nil
-        
+
         apiService.updateGroup(id: id, name: name, description: description)
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     self?.isLoading = false
-                    
+
                     if case .failure(let error) = completion {
                         self?.error = error
                         print("Error updating group: \(error.localizedDescription)")
@@ -160,19 +168,19 @@ class GroupService: ObservableObject, GroupServiceProtocol {
             )
             .store(in: &cancellables)
     }
-    
+
     func deleteGroup(id: String) {
         guard !isLoading else { return }
-        
+
         isLoading = true
         error = nil
-        
+
         apiService.deleteGroup(id: id)
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     self?.isLoading = false
-                    
+
                     if case .failure(let error) = completion {
                         self?.error = error
                         print("Error deleting group: \(error.localizedDescription)")
@@ -185,12 +193,12 @@ class GroupService: ObservableObject, GroupServiceProtocol {
             )
             .store(in: &cancellables)
     }
-    
+
     // MARK: - Helper Methods
     func clearError() {
         error = nil
     }
-    
+
     func getGroup(by id: String) -> Group? {
         return groups.first { $0.id == id }
     }

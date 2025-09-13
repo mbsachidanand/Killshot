@@ -2,7 +2,7 @@
   "name": "expense-manager-backend",
   "version": "1.0.0",
   "description": "Backend API for Expense Manager expense splitting app",
-  "main": "src/server.js",
+  "main": "dist/server.js",
   "scripts": {
     "build": "tsc && tsc-alias",
     "build:watch": "tsc --watch",

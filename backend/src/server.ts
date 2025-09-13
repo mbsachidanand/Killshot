@@ -3,6 +3,8 @@
  * Main server file for the expense splitting app API
  *
  * @fileoverview TypeScript implementation of the main server with full type safety
+ * This server provides a RESTful API for the iOS expense management app,
+ * with PostgreSQL database integration and comprehensive error handling.
  */
 
 import cors from 'cors';
@@ -31,6 +33,13 @@ dotenv.config();
  *
  * This class initializes and configures the Express application
  * with all necessary middleware, routes, and error handling.
+ *
+ * Features:
+ * - TypeScript with full type safety
+ * - PostgreSQL database integration
+ * - Comprehensive error handling
+ * - Request validation and sanitization
+ * - Rate limiting and security headers
  */
 class App {
   public app: Application;

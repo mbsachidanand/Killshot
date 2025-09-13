@@ -13,7 +13,7 @@ import Combine
 /**
  * APIServiceProtocol - Defines the contract for API operations
  *
- * This protocol defines all the methods needed to interact with our backend API.
+ * This protocol defines all the methods needed to interact with our TypeScript backend API.
  * Using a protocol allows us to easily swap implementations for testing or different environments.
  *
  * All methods return AnyPublisher<SuccessType, APIError> which is Combine's reactive programming pattern.

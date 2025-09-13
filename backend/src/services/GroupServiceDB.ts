@@ -1,6 +1,12 @@
 /**
  * Group Service with Database Integration
- * Handles business logic for group operations using database
+ * Handles business logic for group operations using PostgreSQL database
+ *
+ * Features:
+ * - Full TypeScript type safety
+ * - Database-backed operations (replaces in-memory storage)
+ * - Comprehensive error handling
+ * - Support for complex group management and member operations
  */
 
 import { DatabaseFactory } from '../database/DatabaseFactory';
