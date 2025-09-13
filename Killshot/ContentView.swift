@@ -535,10 +535,8 @@ struct GroupDetailView: View {
             // Show alert if this view was navigated to after adding an expense
             if showSuccessMessage && !hasShownAlert {
                 hasShownAlert = true
-                print("🔄 GroupDetailView: Will show alert in 1.5 seconds")
                 // Use a longer delay to ensure the view is fully loaded and navigation is complete
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    print("🔄 GroupDetailView: Setting showAlert = true")
                     showAlert = true
                 }
             }
