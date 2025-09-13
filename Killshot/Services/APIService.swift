@@ -240,7 +240,7 @@ class APIService: APIServiceProtocol {
                 // Convert any error to our APIError type
                 if let apiError = error as? APIError {
                     return apiError
-                } else if let decodingError = error as? DecodingError {
+                } else if error is DecodingError {
                     return APIError.decodingError
                 } else {
                     return APIError.networkError(error)

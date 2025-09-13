@@ -739,7 +739,7 @@ struct AddExpenseView: View {
                 }
                 // Set the paid by field to current user
                 paidBy = "\(currentUser.name) (me)"
-                
+
                 // Focus the title field after a short delay to ensure the view is fully loaded
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     isTitleFieldFocused = true
