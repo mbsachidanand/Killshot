@@ -83,16 +83,32 @@ struct ContentView: View {
                 // onChange watches for changes to groupService.groups
                 // When groups are updated (e.g., after adding an expense), this runs
                 .onChange(of: groupService.groups) { oldGroups, newGroups in
-                    print("🔄 ContentView: Groups updated, count: \(newGroups.count)")
-
                     // If we have a pending navigation, find the updated group and navigate
                     // This ensures we navigate to the most up-to-date group data
                     if let pendingGroup = selectedGroupForDetails {
                         if let updatedGroup = newGroups.first(where: { $0.id == pendingGroup.id }) {
-                            print("🔄 ContentView: Found updated group for navigation: \(updatedGroup.name)")
                             selectedGroupForDetails = updatedGroup
                         }
                     }
+                }
+                // MARK: - Navigation Destination
+                // navigationDestination defines what view to show when navigating to a group
+                // It automatically triggers when selectedGroupForDetails is set to a non-nil value
+                .navigationDestination(item: $selectedGroupForDetails) { group in
+                    // Create the GroupDetailView with the selected group
+                    GroupDetailView(group: group, showSuccessMessage: showSuccessAlert)
+                        .onAppear {
+                            // Reset the success alert flag after navigation
+                            // We use a small delay to ensure the view is fully loaded
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                showSuccessAlert = false
+                            }
+                        }
+                        .onDisappear {
+                            // Clear the selected group when we navigate away
+                            // This prevents the same group from being selected again
+                            selectedGroupForDetails = nil
+                        }
                 }
         }
         // MARK: - Sheet Presentation
@@ -104,22 +120,24 @@ struct ContentView: View {
             // When the sheet is presented, create an AddExpenseView
             // The onExpenseAdded closure is called when an expense is successfully added
             AddExpenseView(onExpenseAdded: { group in
-                print("🔄 ContentView: Received group from AddExpenseView: \(group?.name ?? "nil")")
-
                 // Navigate to group details page if group is provided
                 if let group = group {
-                    print("🔄 ContentView: Setting up navigation to group: \(group.name)")
-                    print("🔄 ContentView: Group ID: \(group.id)")
-
-                    // Set up navigation immediately
-                    selectedGroupForDetails = group
-                    showSuccessAlert = true
-                    print("🔄 ContentView: selectedGroupForDetails set to: \(group.name)")
-
-                    // Refresh groups in background
+                    // First refresh groups to get the latest data, then navigate
                     groupService.refreshGroups()
+
+                    // Set up navigation after a short delay to ensure fresh data
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        // Find the updated group with fresh data
+                        if let updatedGroup = groupService.groups.first(where: { $0.id == group.id }) {
+                            selectedGroupForDetails = updatedGroup
+                            showSuccessAlert = true
+                        } else {
+                            // Fallback to original group if not found in updated list
+                            selectedGroupForDetails = group
+                            showSuccessAlert = true
+                        }
+                    }
                 } else {
-                    print("🔄 ContentView: No group provided, not navigating")
                     // Still refresh groups even if no navigation
                     groupService.refreshGroups()
                 }
@@ -130,49 +148,30 @@ struct ContentView: View {
         // Used on macOS and other platforms
         .sheet(isPresented: $showingAddExpense) {
             AddExpenseView(onExpenseAdded: { group in
-                print("🔄 ContentView: Received group from AddExpenseView: \(group?.name ?? "nil")")
-
                 // Navigate to group details page if group is provided
                 if let group = group {
-                    print("🔄 ContentView: Setting up navigation to group: \(group.name)")
-                    print("🔄 ContentView: Group ID: \(group.id)")
-
-                    // Set up navigation immediately
-                    selectedGroupForDetails = group
-                    showSuccessAlert = true
-                    print("🔄 ContentView: selectedGroupForDetails set to: \(group.name)")
-
-                    // Refresh groups in background
+                    // First refresh groups to get the latest data, then navigate
                     groupService.refreshGroups()
+
+                    // Set up navigation after a short delay to ensure fresh data
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        // Find the updated group with fresh data
+                        if let updatedGroup = groupService.groups.first(where: { $0.id == group.id }) {
+                            selectedGroupForDetails = updatedGroup
+                            showSuccessAlert = true
+                        } else {
+                            // Fallback to original group if not found in updated list
+                            selectedGroupForDetails = group
+                            showSuccessAlert = true
+                        }
+                    }
                 } else {
-                    print("🔄 ContentView: No group provided, not navigating")
                     // Still refresh groups even if no navigation
                     groupService.refreshGroups()
                 }
             })
         }
         #endif
-        // MARK: - Navigation Destination
-        // navigationDestination defines what view to show when navigating to a group
-        // It automatically triggers when selectedGroupForDetails is set to a non-nil value
-        .navigationDestination(item: $selectedGroupForDetails) { group in
-            // Create the GroupDetailView with the selected group
-            GroupDetailView(group: group, showSuccessMessage: showSuccessAlert)
-                .onAppear {
-                    print("🔄 ContentView: Navigation destination triggered for group: \(group.name)")
-                    // Reset the success alert flag after navigation
-                    // We use a small delay to ensure the view is fully loaded
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        showSuccessAlert = false
-                    }
-                }
-                .onDisappear {
-                    print("🔄 ContentView: GroupDetailView disappeared, clearing selectedGroupForDetails")
-                    // Clear the selected group when we navigate away
-                    // This prevents the same group from being selected again
-                    selectedGroupForDetails = nil
-                }
-        }
     }
 
     // MARK: - Main Content
@@ -739,8 +738,6 @@ struct AddExpenseView: View {
                 groupService.loadGroups()
                 // Set the paid by field to current user
                 paidBy = "\(currentUser.name) (me)"
-                // Debug: Print available members
-                print("Available members: \(memberDisplayOptions)")
             }
         }
         .background(Color.gray.opacity(0.05))
@@ -1037,7 +1034,6 @@ struct AddExpenseView: View {
             if validateForm() {
                 guard let group = selectedGroup,
                       let amountValue = Double(amount) else {
-                    print("Invalid amount or group")
                     return
                 }
 
@@ -1047,7 +1043,6 @@ struct AddExpenseView: View {
 
                 // Get the selected member ID
                 guard let selectedMemberId = getMemberId(from: paidBy) else {
-                    print("Error: Could not find member ID for selected payer")
                     return
                 }
 
@@ -1062,24 +1057,15 @@ struct AddExpenseView: View {
                     description: nil
                 ) { [weak groupService] success in
                     if success {
-                        // Refresh groups with a delay to ensure database transaction is fully committed
-                        print("🔄 Expense created successfully, refreshing groups...")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                            groupService?.refreshGroups()
-                        }
-
-                        // Pass the selected group to the parent view first, then dismiss after navigation is set up
-                        print("🔄 AddExpenseView: Calling onExpenseAdded with group: \(selectedGroup?.name ?? "nil")")
+                        // Pass the selected group to the parent view immediately for navigation setup
                         onExpenseAdded?(selectedGroup)
 
-                        // Dismiss after a short delay to allow navigation to be set up
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        // Dismiss the sheet after a short delay to allow navigation to be set up
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                             dismiss()
                         }
                     }
                 }
-            } else {
-                print("Please fill in all required fields and select a group")
             }
         }) {
             HStack {

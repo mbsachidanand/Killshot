@@ -241,7 +241,6 @@ class APIService: APIServiceProtocol {
                 if let apiError = error as? APIError {
                     return apiError
                 } else if let decodingError = error as? DecodingError {
-                    print("🔍 DecodingError details: \(decodingError)")
                     return APIError.decodingError
                 } else {
                     return APIError.networkError(error)

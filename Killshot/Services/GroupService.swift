@@ -63,29 +63,11 @@ class GroupService: ObservableObject, GroupServiceProtocol {
 
                     if case .failure(let error) = completion {
                         self?.error = error
-                        print("🚨 Error loading groups: \(error.localizedDescription)")
-                        print("🚨 Error type: \(type(of: error))")
-                        print("🚨 API Error: \(error)")
                     }
                 },
                 receiveValue: { [weak self] groups in
-                    print("🔄 Received \(groups.count) groups from API")
-                    for group in groups {
-                        print("📊 API Group: \(group.name)")
-                        print("   - Backend totalExpenses: \(group.totalExpenses)")
-                        print("   - Calculated totalExpensesDouble: \(group.totalExpensesDouble)")
-                        print("   - Expenses count: \(group.expenses.count)")
-                        print("   - Expenses total: \(group.expenses.reduce(0) { $0 + $1.amount })")
-                    }
-
                     // Update groups immediately on main thread
                     self?.groups = groups
-                    print("✅ Updated groups array with \(groups.count) groups")
-
-                    // Verify the data after assignment
-                    for group in self?.groups ?? [] {
-                        print("📊 Stored Group: \(group.name) - Expenses: \(group.expenses.count) - Total: \(group.totalExpensesDouble)")
-                    }
 
                     // Update refresh trigger to force UI update
                     self?.refreshTrigger = UUID()
@@ -98,12 +80,10 @@ class GroupService: ObservableObject, GroupServiceProtocol {
     }
 
     func refreshGroups() {
-        print("🔄 Refreshing groups...")
         loadGroups()
     }
 
     func refreshGroupsWithRetry(maxRetries: Int = 3) {
-        print("🔄 Refreshing groups with retry mechanism...")
         loadGroups()
 
         // If we still have stale data after a short delay, retry
@@ -111,7 +91,6 @@ class GroupService: ObservableObject, GroupServiceProtocol {
             // Check if we need to retry based on data freshness
             // This is a simple retry mechanism
             if maxRetries > 0 {
-                print("🔄 Retrying groups refresh... (\(maxRetries) retries left)")
                 self.refreshGroupsWithRetry(maxRetries: maxRetries - 1)
             }
         }
@@ -131,12 +110,10 @@ class GroupService: ObservableObject, GroupServiceProtocol {
 
                     if case .failure(let error) = completion {
                         self?.error = error
-                        print("Error creating group: \(error.localizedDescription)")
                     }
                 },
                 receiveValue: { [weak self] newGroup in
                     self?.groups.append(newGroup)
-                    print("Successfully created group: \(newGroup.name)")
                 }
             )
             .store(in: &cancellables)
@@ -156,14 +133,12 @@ class GroupService: ObservableObject, GroupServiceProtocol {
 
                     if case .failure(let error) = completion {
                         self?.error = error
-                        print("Error updating group: \(error.localizedDescription)")
                     }
                 },
                 receiveValue: { [weak self] updatedGroup in
                     if let index = self?.groups.firstIndex(where: { $0.id == id }) {
                         self?.groups[index] = updatedGroup
                     }
-                    print("Successfully updated group: \(updatedGroup.name)")
                 }
             )
             .store(in: &cancellables)
@@ -183,12 +158,10 @@ class GroupService: ObservableObject, GroupServiceProtocol {
 
                     if case .failure(let error) = completion {
                         self?.error = error
-                        print("Error deleting group: \(error.localizedDescription)")
                     }
                 },
                 receiveValue: { [weak self] _ in
                     self?.groups.removeAll { $0.id == id }
-                    print("Successfully deleted group with id: \(id)")
                 }
             )
             .store(in: &cancellables)

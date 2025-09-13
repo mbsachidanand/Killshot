@@ -111,13 +111,11 @@ class ExpenseService: ObservableObject, ExpenseServiceProtocol {
                 // Handle errors
                 if case .failure(let error) = completionResult {
                     self?.error = error
-                    print("🚨 Error creating expense: \(error.localizedDescription)")
                     completion(false)
                 }
             },
             receiveValue: { expense in
-                // Success - log and call completion
-                print("✅ Successfully created expense: \(expense.title) - ₹\(expense.amount)")
+                // Success - call completion
                 completion(true)
             }
         )
