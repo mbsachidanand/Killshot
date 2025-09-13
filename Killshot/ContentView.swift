@@ -900,11 +900,12 @@ struct AddExpenseView: View {
                 .background(Color.white)
                 .cornerRadius(12)
             } else if userGroups.isEmpty {
-                HStack {
+                HStack(alignment: .center) {
                     Text("No groups available")
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 16)
                 .background(Color.white)

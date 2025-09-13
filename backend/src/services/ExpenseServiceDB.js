@@ -3,7 +3,7 @@
  * Handles business logic for expense operations using database
  */
 
-const databaseFactory = require('../database/DatabaseFactory');
+const { DatabaseFactory } = require('../database/DatabaseFactory');
 
 class ExpenseServiceDB {
   constructor() {
@@ -15,7 +15,9 @@ class ExpenseServiceDB {
    */
   async initialize() {
     if (!this.db) {
-      this.db = await databaseFactory.getAdapter();
+      const factory = DatabaseFactory.getInstance();
+      this.db = factory.getDefaultAdapter();
+      await this.db.connect();
     }
   }
 
@@ -25,41 +27,54 @@ class ExpenseServiceDB {
   async createExpense(expenseData) {
     try {
       await this.initialize();
-      
+
       const { title, amount, paidBy, groupId, splitType, date, description, splitDetails } = expenseData;
-      
+
       // Validate required fields
       const validationErrors = this.validateExpenseData(expenseData);
       if (validationErrors.length > 0) {
         throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
       }
-      
+
       const expenseId = `expense_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Create expense
-      const expense = await this.db.insert('expenses', {
-        id: expenseId,
-        title: title.trim(),
-        amount: parseFloat(amount),
-        paid_by: paidBy,
-        group_id: groupId,
-        split_type: splitType || 'equal',
-        date: date || new Date().toISOString(),
-        description: description || ''
-      });
-      
-      // Create expense splits
+
+      // Create expense using raw SQL
+      const expenseQuery = `
+        INSERT INTO expenses (id, title, amount, paid_by, group_id, split_type, date, description, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING *
+      `;
+
+      const now = new Date().toISOString();
+      const expense = await this.db.query(expenseQuery, [
+        expenseId,
+        title.trim(),
+        parseFloat(amount),
+        paidBy,
+        groupId,
+        splitType || 'equal',
+        date || now,
+        description || '',
+        now,
+        now
+      ]);
+
+      // Create expense splits using raw SQL
       if (splitDetails && splitDetails.length > 0) {
         for (const split of splitDetails) {
-          await this.db.insert('expense_splits', {
-            expense_id: expenseId,
-            member_id: split.userId,
-            amount: parseFloat(split.amount),
-            percentage: parseFloat(split.percentage)
-          });
+          const splitQuery = `
+            INSERT INTO expense_splits (expense_id, member_id, amount, percentage)
+            VALUES ($1, $2, $3, $4)
+          `;
+          await this.db.query(splitQuery, [
+            expenseId,
+            split.userId,
+            parseFloat(split.amount),
+            parseFloat(split.percentage)
+          ]);
         }
       }
-      
+
       return await this.getExpenseById(expenseId);
     } catch (error) {
       throw new Error(`Failed to create expense: ${error.message}`);
@@ -72,9 +87,9 @@ class ExpenseServiceDB {
   async getAllExpenses() {
     try {
       await this.initialize();
-      
+
       const expensesQuery = `
-        SELECT 
+        SELECT
           e.id,
           e.title,
           e.amount,
@@ -88,14 +103,14 @@ class ExpenseServiceDB {
         FROM expenses e
         ORDER BY e.created_at DESC
       `;
-      
+
       const expenses = await this.db.getMany(expensesQuery);
-      
+
       // Get split details for each expense
       for (const expense of expenses) {
         expense.splitDetails = await this.getExpenseSplits(expense.id);
       }
-      
+
       return expenses;
     } catch (error) {
       throw new Error(`Failed to fetch expenses: ${error.message}`);
@@ -108,9 +123,9 @@ class ExpenseServiceDB {
   async getExpensesByGroup(groupId) {
     try {
       await this.initialize();
-      
+
       const expensesQuery = `
-        SELECT 
+        SELECT
           e.id,
           e.title,
           e.amount,
@@ -125,14 +140,14 @@ class ExpenseServiceDB {
         WHERE e.group_id = $1
         ORDER BY e.created_at DESC
       `;
-      
+
       const expenses = await this.db.getMany(expensesQuery, [groupId]);
-      
+
       // Get split details for each expense
       for (const expense of expenses) {
         expense.splitDetails = await this.getExpenseSplits(expense.id);
       }
-      
+
       return expenses;
     } catch (error) {
       throw new Error(`Failed to fetch group expenses: ${error.message}`);
@@ -145,9 +160,9 @@ class ExpenseServiceDB {
   async getExpenseById(expenseId) {
     try {
       await this.initialize();
-      
+
       const expenseQuery = `
-        SELECT 
+        SELECT
           e.id,
           e.title,
           e.amount,
@@ -161,17 +176,18 @@ class ExpenseServiceDB {
         FROM expenses e
         WHERE e.id = $1
       `;
-      
-      const expenseData = await this.db.getOne(expenseQuery, [expenseId]);
+
+      const result = await this.db.query(expenseQuery, [expenseId]);
+      const expenseData = result.rows && result.rows.length > 0 ? result.rows[0] : null;
       if (!expenseData) {
         throw new Error(`Expense with ID ${expenseId} not found`);
       }
-      
+
       // Get split details
       const splitDetails = await this.getExpenseSplits(expenseId);
-      
+
       // Create Expense model instance
-      const Expense = require('../models/Expense');
+      const { Expense } = require('../models/Expense');
       const expense = new Expense({
         id: expenseData.id,
         title: expenseData.title,
@@ -185,7 +201,7 @@ class ExpenseServiceDB {
         createdAt: expenseData.created_at,
         updatedAt: expenseData.updated_at
       });
-      
+
       return expense;
     } catch (error) {
       throw new Error(`Failed to fetch expense: ${error.message}`);
@@ -198,9 +214,9 @@ class ExpenseServiceDB {
   async getExpenseSplits(expenseId) {
     try {
       await this.initialize();
-      
+
       const splitsQuery = `
-        SELECT 
+        SELECT
           es.member_id as user_id,
           m.name as user_name,
           es.amount,
@@ -210,8 +226,9 @@ class ExpenseServiceDB {
         WHERE es.expense_id = $1
         ORDER BY es.amount DESC
       `;
-      
-      return await this.db.getMany(splitsQuery, [expenseId]);
+
+      const result = await this.db.query(splitsQuery, [expenseId]);
+      return result.rows || [];
     } catch (error) {
       throw new Error(`Failed to fetch expense splits: ${error.message}`);
     }
@@ -223,15 +240,15 @@ class ExpenseServiceDB {
   async updateExpense(expenseId, updateData) {
     try {
       await this.initialize();
-      
+
       const { title, amount, paidBy, splitType, date, description, splitDetails } = updateData;
-      
+
       // Validate update data
       const validationErrors = this.validateExpenseData(updateData);
       if (validationErrors.length > 0) {
         throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
       }
-      
+
       const updateFields = {};
       if (title !== undefined) updateFields.title = title.trim();
       if (amount !== undefined) updateFields.amount = parseFloat(amount);
@@ -239,19 +256,19 @@ class ExpenseServiceDB {
       if (splitType !== undefined) updateFields.split_type = splitType;
       if (date !== undefined) updateFields.date = date;
       if (description !== undefined) updateFields.description = description;
-      
+
       if (Object.keys(updateFields).length > 0) {
         const updatedExpense = await this.db.update('expenses', updateFields, { id: expenseId });
         if (!updatedExpense) {
           throw new Error(`Expense with ID ${expenseId} not found`);
         }
       }
-      
+
       // Update splits if provided
       if (splitDetails && splitDetails.length > 0) {
         // Delete existing splits
         await this.db.query('DELETE FROM expense_splits WHERE expense_id = $1', [expenseId]);
-        
+
         // Insert new splits
         for (const split of splitDetails) {
           await this.db.insert('expense_splits', {
@@ -262,7 +279,7 @@ class ExpenseServiceDB {
           });
         }
       }
-      
+
       return await this.getExpenseById(expenseId);
     } catch (error) {
       throw new Error(`Failed to update expense: ${error.message}`);
@@ -275,12 +292,12 @@ class ExpenseServiceDB {
   async deleteExpense(expenseId) {
     try {
       await this.initialize();
-      
+
       const expense = await this.getExpenseById(expenseId);
-      
+
       // Delete expense (splits will be deleted due to CASCADE)
       await this.db.delete('expenses', { id: expenseId });
-      
+
       return expense;
     } catch (error) {
       throw new Error(`Failed to delete expense: ${error.message}`);
@@ -293,7 +310,7 @@ class ExpenseServiceDB {
   async getExpensesByUser(userId) {
     try {
       await this.initialize();
-      
+
       const expensesQuery = `
         SELECT DISTINCT
           e.id,
@@ -311,14 +328,14 @@ class ExpenseServiceDB {
         WHERE e.paid_by = $1 OR es.member_id = $1
         ORDER BY e.created_at DESC
       `;
-      
+
       const expenses = await this.db.getMany(expensesQuery, [userId]);
-      
+
       // Get split details for each expense
       for (const expense of expenses) {
         expense.splitDetails = await this.getExpenseSplits(expense.id);
       }
-      
+
       return expenses;
     } catch (error) {
       throw new Error(`Failed to fetch user expenses: ${error.message}`);
@@ -331,26 +348,26 @@ class ExpenseServiceDB {
   async getGroupExpenseStats(groupId) {
     try {
       await this.initialize();
-      
+
       const statsQuery = `
-        SELECT 
+        SELECT
           COUNT(*) as expense_count,
           COALESCE(SUM(amount), 0) as total_amount
         FROM expenses
         WHERE group_id = $1
       `;
-      
+
       const stats = await this.db.getOne(statsQuery, [groupId]);
-      
+
       // Calculate balances
       const balancesQuery = `
-        SELECT 
+        SELECT
           m.id as user_id,
           m.name as user_name,
           COALESCE(SUM(
-            CASE 
-              WHEN e.paid_by = m.id THEN e.amount 
-              ELSE 0 
+            CASE
+              WHEN e.paid_by = m.id THEN e.amount
+              ELSE 0
             END
           ), 0) as paid_amount,
           COALESCE(SUM(es.amount), 0) as owed_amount
@@ -361,18 +378,18 @@ class ExpenseServiceDB {
         WHERE gm.group_id = $1
         GROUP BY m.id, m.name
       `;
-      
+
       const balances = await this.db.getMany(balancesQuery, [groupId]);
-      
+
       // Calculate net balance for each user
       const userBalances = {};
       balances.forEach(balance => {
         userBalances[balance.user_id] = balance.paid_amount - balance.owed_amount;
       });
-      
+
       // Get all expenses for the group
       const expenses = await this.getExpensesByGroup(groupId);
-      
+
       return {
         totalAmount: parseFloat(stats.total_amount),
         expenseCount: parseInt(stats.expense_count),
@@ -390,13 +407,13 @@ class ExpenseServiceDB {
   async calculateEqualSplit(groupId, amount, participants) {
     try {
       await this.initialize();
-      
+
       if (!participants || participants.length === 0) {
         throw new Error('Participants list is required');
       }
-      
+
       const amountPerPerson = amount / participants.length;
-      
+
       return participants.map(participant => ({
         userId: participant.id,
         userName: participant.name,
@@ -413,27 +430,27 @@ class ExpenseServiceDB {
    */
   validateExpenseData(expenseData) {
     const errors = [];
-    
+
     if (expenseData.title !== undefined && (!expenseData.title || expenseData.title.trim() === '')) {
       errors.push('Title is required');
     }
-    
+
     if (expenseData.amount !== undefined && (!expenseData.amount || isNaN(expenseData.amount) || parseFloat(expenseData.amount) <= 0)) {
       errors.push('Amount must be a positive number');
     }
-    
+
     if (expenseData.paidBy !== undefined && (!expenseData.paidBy || expenseData.paidBy.trim() === '')) {
       errors.push('Paid by user ID is required');
     }
-    
+
     if (expenseData.groupId !== undefined && (!expenseData.groupId || expenseData.groupId.trim() === '')) {
       errors.push('Group ID is required');
     }
-    
+
     if (expenseData.splitType !== undefined && !['equal', 'exact', 'percentage'].includes(expenseData.splitType)) {
       errors.push('Invalid split type. Must be equal, exact, or percentage');
     }
-    
+
     return errors;
   }
 }

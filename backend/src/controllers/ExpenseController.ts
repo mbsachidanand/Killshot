@@ -7,7 +7,6 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { asyncHandler, createNotFoundError, createValidationError } from '../middleware/errorHandler';
-import { ExpenseService } from '../services/ExpenseService';
 import {
     ApiResponse,
     CreateExpenseRequest,
@@ -17,6 +16,7 @@ import {
     PaginationParams,
     UpdateExpenseRequest
 } from '../types';
+const ExpenseServiceDB = require('../services/ExpenseServiceDB');
 
 /**
  * Expense Controller Class
@@ -25,11 +25,11 @@ import {
  * It provides methods for CRUD operations and expense management.
  */
 export class ExpenseController {
-  private expenseService: ExpenseService;
+  private expenseServiceDB: any;
 
   constructor() {
     try {
-      this.expenseService = new ExpenseService();
+      this.expenseServiceDB = new ExpenseServiceDB();
       console.log('ExpenseController initialized successfully');
     } catch (error) {
       console.error('Error initializing ExpenseController:', error);
@@ -60,26 +60,26 @@ export class ExpenseController {
 
       // Filter by group ID
       if (groupId) {
-        expenses = await this.expenseService.getExpensesByGroup(groupId as string);
+        expenses = await this.expenseServiceDB.getExpensesByGroup(groupId as string);
       }
       // Filter by user ID
       else if (userId) {
-        expenses = await this.expenseService.getExpensesByUser(userId as string);
+        expenses = await this.expenseServiceDB.getExpensesByUser(userId as string);
       }
       // Search expenses
       else if (search) {
-        expenses = await this.expenseService.searchExpenses(search as string);
+        expenses = await this.expenseServiceDB.searchExpenses(search as string);
       }
       // Filter by date range
       else if (startDate && endDate) {
-        expenses = await this.expenseService.getExpensesByDateRange(
+        expenses = await this.expenseServiceDB.getExpensesByDateRange(
           new Date(startDate as string),
           new Date(endDate as string)
         );
       }
       // Get all expenses
       else {
-        expenses = await this.expenseService.findAll();
+        expenses = await this.expenseServiceDB.getAllExpenses();
       }
 
       // Ensure expenses is an array
@@ -133,7 +133,7 @@ export class ExpenseController {
         }]);
       }
 
-      const expense = await this.expenseService.getExpenseById(id);
+      const expense = await this.expenseServiceDB.getExpenseById(id);
 
       const response: ExpenseResponse = {
         success: true,
@@ -195,7 +195,7 @@ export class ExpenseController {
         }]);
       }
 
-      const expense = await this.expenseService.createExpense(expenseData);
+      const expense = await this.expenseServiceDB.createExpense(expenseData);
 
       const response: ExpenseResponse = {
         success: true,
@@ -248,7 +248,7 @@ export class ExpenseController {
         }]);
       }
 
-      const expense = await this.expenseService.updateExpense(id, updateData);
+      const expense = await this.expenseServiceDB.updateExpense(id, updateData);
 
       const response: ExpenseResponse = {
         success: true,
@@ -286,7 +286,7 @@ export class ExpenseController {
         }]);
       }
 
-      await this.expenseService.deleteExpense(id);
+      await this.expenseServiceDB.deleteExpense(id);
 
       const response: ApiResponse = {
         success: true,
@@ -323,7 +323,7 @@ export class ExpenseController {
         }]);
       }
 
-      const expenses = await this.expenseService.getExpensesByGroup(groupId);
+      const expenses = await this.expenseServiceDB.getExpensesByGroup(groupId);
 
       const response: ExpensesResponse = {
         success: true,
@@ -365,7 +365,7 @@ export class ExpenseController {
         }]);
       }
 
-      const expenses = await this.expenseService.getExpensesByUser(userId);
+      const expenses = await this.expenseServiceDB.getExpensesByUser(userId);
 
       const response: ExpensesResponse = {
         success: true,
@@ -407,7 +407,7 @@ export class ExpenseController {
         }]);
       }
 
-      const stats = await this.expenseService.getGroupExpenseStats(groupId);
+      const stats = await this.expenseServiceDB.getGroupExpenseStats(groupId);
 
       const response: ApiResponse = {
         success: true,
@@ -458,7 +458,7 @@ export class ExpenseController {
         }]);
       }
 
-      const splitCalculation = await this.expenseService.calculateEqualSplit(
+      const splitCalculation = await this.expenseServiceDB.calculateEqualSplit(
         groupId,
         amount,
         participants
@@ -496,7 +496,7 @@ export class ExpenseController {
         }]);
       }
 
-      const expenses = await this.expenseService.searchExpenses(q as string);
+      const expenses = await this.expenseServiceDB.searchExpenses(q as string);
 
       const response: ExpensesResponse = {
         success: true,
@@ -557,7 +557,7 @@ export class ExpenseController {
         }]);
       }
 
-      const expenses = await this.expenseService.getExpensesByDateRange(start, end);
+      const expenses = await this.expenseServiceDB.getExpensesByDateRange(start, end);
 
       const response: ExpensesResponse = {
         success: true,

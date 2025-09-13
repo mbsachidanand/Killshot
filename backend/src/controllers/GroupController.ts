@@ -6,7 +6,6 @@
  */
 
 import { asyncHandler, createNotFoundError, createValidationError } from '@/middleware/errorHandler';
-import { GroupService } from '@/services/GroupService';
 import {
     ApiResponse,
     CreateGroupRequest,
@@ -16,6 +15,7 @@ import {
     UpdateGroupRequest
 } from '@/types';
 import { NextFunction, Request, Response } from 'express';
+const GroupServiceDB = require('../services/GroupServiceDB');
 
 /**
  * Group Controller Class
@@ -24,10 +24,10 @@ import { NextFunction, Request, Response } from 'express';
  * It provides methods for CRUD operations and group management.
  */
 export class GroupController {
-  private groupService: GroupService;
+  private groupServiceDB: any;
 
   constructor() {
-    this.groupService = new GroupService();
+    this.groupServiceDB = new GroupServiceDB();
   }
 
   /**
@@ -51,9 +51,9 @@ export class GroupController {
 
       let groups;
       if (search) {
-        groups = await this.groupService.searchGroups(search as string);
+        groups = await this.groupServiceDB.searchGroups(search as string);
       } else {
-        groups = await this.groupService.findAll();
+        groups = await this.groupServiceDB.getAllGroups();
       }
 
       // Simple pagination
@@ -101,7 +101,7 @@ export class GroupController {
         }]);
       }
 
-      const group = await this.groupService.getGroupById(id);
+      const group = await this.groupServiceDB.getGroupById(id);
 
       const response: GroupResponse = {
         success: true,
@@ -139,7 +139,7 @@ export class GroupController {
         }]);
       }
 
-      const group = await this.groupService.createGroup(groupData);
+      const group = await this.groupServiceDB.createGroup(groupData);
 
       const response: GroupResponse = {
         success: true,
@@ -184,7 +184,7 @@ export class GroupController {
         }]);
       }
 
-      const group = await this.groupService.updateGroup(id, updateData);
+      const group = await this.groupServiceDB.updateGroup(id, updateData);
 
       const response: GroupResponse = {
         success: true,
@@ -222,7 +222,7 @@ export class GroupController {
         }]);
       }
 
-      await this.groupService.deleteGroup(id);
+      await this.groupServiceDB.deleteGroup(id);
 
       const response: ApiResponse = {
         success: true,
@@ -274,7 +274,7 @@ export class GroupController {
         email: email.trim()
       };
 
-      const group = await this.groupService.addMemberToGroup(id, memberData);
+      const group = await this.groupServiceDB.addMemberToGroup(id, memberData);
 
       const response: GroupResponse = {
         success: true,
@@ -312,7 +312,7 @@ export class GroupController {
         }]);
       }
 
-      const group = await this.groupService.removeMemberFromGroup(id, memberId);
+      const group = await this.groupServiceDB.removeMemberFromGroup(id, memberId);
 
       const response: GroupResponse = {
         success: true,
@@ -350,7 +350,7 @@ export class GroupController {
         }]);
       }
 
-      const expenses = await this.groupService.getGroupExpenses(id);
+      const expenses = await this.groupServiceDB.getGroupExpenses(id);
 
       const response: ApiResponse = {
         success: true,
@@ -387,7 +387,7 @@ export class GroupController {
         }]);
       }
 
-      const stats = await this.groupService.getGroupStats(id);
+      const stats = await this.groupServiceDB.getGroupStats(id);
 
       const response: ApiResponse = {
         success: true,
@@ -424,7 +424,7 @@ export class GroupController {
         }]);
       }
 
-      const groups = await this.groupService.searchGroups(q as string);
+      const groups = await this.groupServiceDB.searchGroups(q as string);
 
       const response: GroupsResponse = {
         success: true,
