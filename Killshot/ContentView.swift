@@ -96,19 +96,15 @@ struct ContentView: View {
                 // It automatically triggers when selectedGroupForDetails is set to a non-nil value
                 .navigationDestination(item: $selectedGroupForDetails) { group in
                     // Create the GroupDetailView with the selected group
-                    GroupDetailView(group: group, showSuccessMessage: showSuccessAlert)
-                        .onAppear {
-                            // Reset the success alert flag after navigation
-                            // We use a small delay to ensure the view is fully loaded
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                showSuccessAlert = false
-                            }
-                        }
-                        .onDisappear {
-                            // Clear the selected group when we navigate away
-                            // This prevents the same group from being selected again
-                            selectedGroupForDetails = nil
-                        }
+                    GroupDetailView(group: group, showSuccessMessage: showSuccessAlert) {
+                        // Callback to reset the success alert flag
+                        showSuccessAlert = false
+                    }
+                    .onDisappear {
+                        // Clear the selected group when we navigate away
+                        // This prevents the same group from being selected again
+                        selectedGroupForDetails = nil
+                    }
                 }
         }
         // MARK: - Sheet Presentation
@@ -293,7 +289,7 @@ struct ContentView: View {
      */
     private func groupRow(for group: Group, at index: Int) -> some View {
         // NavigationLink makes the entire row tappable and navigates to GroupDetailView
-        NavigationLink(destination: GroupDetailView(group: group, showSuccessMessage: false)) {
+        NavigationLink(destination: GroupDetailView(group: group, showSuccessMessage: false, onAlertDismissed: nil)) {
             HStack {
                 // Left side: Group information
                 VStack(alignment: .leading, spacing: 4) {
@@ -457,6 +453,7 @@ struct GroupDetailView: View {
     // MARK: - Properties
     let group: Group                    // The group to display details for
     let showSuccessMessage: Bool        // Whether to show success alert on appear
+    let onAlertDismissed: (() -> Void)? // Callback when alert is dismissed
     @State private var showAlert = false // Controls the success alert display
 
     // MARK: - Main View Body
@@ -541,7 +538,10 @@ struct GroupDetailView: View {
         // MARK: - Success Alert
         // Alert that shows when navigating here after adding an expense
         .alert("Expense Added!", isPresented: $showAlert) {
-            Button("OK") { }  // Dismiss button
+            Button("OK") { 
+                // Call the callback to reset the success alert flag
+                onAlertDismissed?()
+            }
         } message: {
             Text("Your expense has been successfully added to this group.")
         }
