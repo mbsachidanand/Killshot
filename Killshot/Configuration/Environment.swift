@@ -41,7 +41,7 @@ enum AppEnvironment {
     var baseURL: String {
         switch self {
         case .development:
-            return "http://localhost:3001/api/v1"
+            return "http://192.168.1.4:3001/api/v1"
         case .staging:
             return "https://api-staging.killshot.app/api/v1"
         case .production:
