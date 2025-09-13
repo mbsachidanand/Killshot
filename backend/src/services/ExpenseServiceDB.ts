@@ -338,7 +338,7 @@ export class ExpenseServiceDB {
         values.push(expenseId);
 
         const updateQuery = `
-          UPDATE expenses 
+          UPDATE expenses
           SET ${updateFields.join(', ')}
           WHERE id = $${paramCount}
           RETURNING *

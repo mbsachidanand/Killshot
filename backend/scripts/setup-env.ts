@@ -7,14 +7,14 @@
  * It copies the appropriate .env file based on the NODE_ENV or provided argument.
  */
 
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Available environments
-const environments = ['development', 'staging', 'production'];
+const environments: string[] = ['development', 'staging', 'production'];
 
 // Get environment from command line argument or NODE_ENV
-const targetEnv = process.argv[2] || process.env.NODE_ENV || 'development';
+const targetEnv: string = process.argv[2] || process.env.NODE_ENV || 'development';
 
 // Validate environment
 if (!environments.includes(targetEnv)) {
@@ -24,8 +24,8 @@ if (!environments.includes(targetEnv)) {
 }
 
 // File paths
-const envFile = path.join(__dirname, '..', '.env');
-const sourceFile = path.join(__dirname, '..', `env.${targetEnv}`);
+const envFile: string = path.join(__dirname, '..', '.env');
+const sourceFile: string = path.join(__dirname, '..', `env.${targetEnv}`);
 
 // Check if source file exists
 if (!fs.existsSync(sourceFile)) {
@@ -43,8 +43,8 @@ try {
 
   // Display current configuration
   console.log('\n📋 Current Configuration:');
-  const envContent = fs.readFileSync(envFile, 'utf8');
-  const lines = envContent.split('\n').filter(line =>
+  const envContent: string = fs.readFileSync(envFile, 'utf8');
+  const lines: string[] = envContent.split('\n').filter(line =>
     line.trim() && !line.startsWith('#')
   );
 
@@ -52,7 +52,7 @@ try {
     const [key, value] = line.split('=');
     if (key && value) {
       // Mask sensitive values
-      const displayValue = key.toLowerCase().includes('password') ||
+      const displayValue: string = key.toLowerCase().includes('password') ||
                           key.toLowerCase().includes('secret') ||
                           key.toLowerCase().includes('key')
         ? '*'.repeat(value.length)
@@ -62,7 +62,7 @@ try {
   });
 
 } catch (error) {
-  console.error(`❌ Error setting up environment: ${error.message}`);
+  console.error(`❌ Error setting up environment: ${error instanceof Error ? error.message : 'Unknown error'}`);
   process.exit(1);
 }
 

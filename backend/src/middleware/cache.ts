@@ -3,7 +3,7 @@
  * Simple in-memory caching for frequently accessed data
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 interface CacheEntry {
   value: any;
@@ -46,16 +46,16 @@ class CacheManager {
    */
   get(key: string): any | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return null;
     }
-    
+
     if (Date.now() > entry.expiry) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return entry.value;
   }
 
@@ -82,7 +82,7 @@ class CacheManager {
     const now = Date.now();
     let validEntries = 0;
     let expiredEntries = 0;
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (now > entry.expiry) {
         expiredEntries++;
@@ -91,7 +91,7 @@ class CacheManager {
         validEntries++;
       }
     }
-    
+
     return {
       totalEntries: validEntries + expiredEntries,
       validEntries,
@@ -114,15 +114,15 @@ const cacheMiddleware = (keyGenerator: KeyGenerator, ttl: number = 5 * 60 * 1000
   return (req: Request, res: Response, next: NextFunction): void => {
     const key = keyGenerator(req);
     const cached = cacheManager.get(key);
-    
+
     if (cached) {
       res.json(cached);
       return;
     }
-    
+
     // Store original json method
     const originalJson = res.json;
-    
+
     // Override json method to cache response
     res.json = function(data: any) {
       // Only cache successful responses
@@ -131,7 +131,7 @@ const cacheMiddleware = (keyGenerator: KeyGenerator, ttl: number = 5 * 60 * 1000
       }
       return originalJson.call(this, data);
     };
-    
+
     next();
   };
 };
@@ -160,10 +160,9 @@ const cacheKeys = {
 };
 
 export {
-  cacheManager,
-  cacheMiddleware,
-  invalidateCache,
-  cacheKeys
+    cacheKeys, cacheManager,
+    cacheMiddleware,
+    invalidateCache
 };
 
 export default {

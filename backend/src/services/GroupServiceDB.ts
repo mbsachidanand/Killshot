@@ -5,7 +5,7 @@
 
 import { DatabaseFactory } from '../database/DatabaseFactory';
 import { DatabaseAdapter } from '../database/abstract/DatabaseAdapter';
-import { Group, GroupDetail, GroupMember, Expense } from '../types';
+import { Expense, Group, GroupDetail } from '../types';
 
 interface GroupData {
   id: string;
@@ -206,7 +206,7 @@ export class GroupServiceDB {
 
       const groupResult = await this.db!.query(groupQuery, [groupId]);
       const group = groupResult.rows && groupResult.rows.length > 0 ? groupResult.rows[0] : null;
-      
+
       if (!group) {
         throw new Error(`Group with ID ${groupId} not found`);
       }
@@ -369,14 +369,14 @@ export class GroupServiceDB {
       values.push(groupId);
 
       const updateQuery = `
-        UPDATE groups 
+        UPDATE groups
         SET ${updateFields.join(', ')}
         WHERE id = $${paramCount}
         RETURNING *
       `;
 
       const result = await this.db!.query(updateQuery, values);
-      
+
       if (!result.rows || result.rows.length === 0) {
         throw new Error(`Group with ID ${groupId} not found`);
       }
@@ -395,7 +395,7 @@ export class GroupServiceDB {
       await this.initialize();
 
       const group = await this.getGroupById(groupId);
-      
+
       // Delete group using raw SQL
       await this.db!.query('DELETE FROM groups WHERE id = $1', [groupId]);
 
@@ -421,7 +421,7 @@ export class GroupServiceDB {
       // Check if member exists, create if not
       const memberQuery = 'SELECT id FROM members WHERE id = $1';
       const memberResult = await this.db!.query(memberQuery, [id]);
-      
+
       if (!memberResult.rows || memberResult.rows.length === 0) {
         const insertMemberQuery = `
           INSERT INTO members (id, name, email, created_at, updated_at)
@@ -433,7 +433,7 @@ export class GroupServiceDB {
 
       // Check if member is already in group
       const groupMemberQuery = `
-        SELECT id FROM group_members 
+        SELECT id FROM group_members
         WHERE group_id = $1 AND member_id = $2
       `;
       const groupMemberResult = await this.db!.query(groupMemberQuery, [groupId, id]);
@@ -464,11 +464,11 @@ export class GroupServiceDB {
       await this.initialize();
 
       const deleteQuery = `
-        DELETE FROM group_members 
+        DELETE FROM group_members
         WHERE group_id = $1 AND member_id = $2
         RETURNING *
       `;
-      
+
       const result = await this.db!.query(deleteQuery, [groupId, memberId]);
 
       if (!result.rows || result.rows.length === 0) {

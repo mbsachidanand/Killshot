@@ -5,11 +5,11 @@
  * Creates .env file from .env.example if it doesn't exist
  */
 
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 
-const envExamplePath = path.join(__dirname, '.env.example');
-const envPath = path.join(__dirname, '.env');
+const envExamplePath: string = path.join(__dirname, '.env.example');
+const envPath: string = path.join(__dirname, '.env');
 
 if (!fs.existsSync(envPath)) {
   if (fs.existsSync(envExamplePath)) {

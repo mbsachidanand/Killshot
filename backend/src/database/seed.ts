@@ -195,45 +195,45 @@ class DatabaseSeeder {
 
   private async clearData(db: DatabaseAdapter): Promise<void> {
     console.log('🧹 Clearing existing data...');
-    
+
     await db.query('DELETE FROM expense_splits');
     await db.query('DELETE FROM expenses');
     await db.query('DELETE FROM group_members');
     await db.query('DELETE FROM groups');
     await db.query('DELETE FROM members');
-    
+
     console.log('✅ Existing data cleared');
   }
 
   private async seedMembers(db: DatabaseAdapter): Promise<void> {
     console.log('👥 Seeding members...');
-    
+
     for (const member of this.sampleMembers) {
       await db.query(
         'INSERT INTO members (id, name, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)',
         [member.id, member.name, member.email, new Date().toISOString(), new Date().toISOString()]
       );
     }
-    
+
     console.log(`✅ Seeded ${this.sampleMembers.length} members`);
   }
 
   private async seedGroups(db: DatabaseAdapter): Promise<void> {
     console.log('🏠 Seeding groups...');
-    
+
     for (const group of this.sampleGroups) {
       await db.query(
         'INSERT INTO groups (id, name, description, created_by, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)',
         [group.id, group.name, group.description, 'unknown', new Date().toISOString(), new Date().toISOString()]
       );
     }
-    
+
     console.log(`✅ Seeded ${this.sampleGroups.length} groups`);
   }
 
   private async seedGroupMemberships(db: DatabaseAdapter): Promise<void> {
     console.log('🔗 Seeding group memberships...');
-    
+
     for (const group of this.sampleGroups) {
       for (const memberId of group.memberIds) {
         await db.query(
@@ -242,13 +242,13 @@ class DatabaseSeeder {
         );
       }
     }
-    
+
     console.log('✅ Group memberships seeded');
   }
 
   private async seedExpenses(db: DatabaseAdapter): Promise<void> {
     console.log('💰 Seeding expenses...');
-    
+
     for (const expense of this.sampleExpenses) {
       await db.query(
         'INSERT INTO expenses (id, title, amount, paid_by, group_id, split_type, date, description, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
@@ -266,13 +266,13 @@ class DatabaseSeeder {
         ]
       );
     }
-    
+
     console.log(`✅ Seeded ${this.sampleExpenses.length} expenses`);
   }
 
   private async seedExpenseSplits(db: DatabaseAdapter): Promise<void> {
     console.log('📊 Seeding expense splits...');
-    
+
     for (const expense of this.sampleExpenses) {
       for (const split of expense.splits) {
         await db.query(
@@ -281,7 +281,7 @@ class DatabaseSeeder {
         );
       }
     }
-    
+
     console.log('✅ Expense splits seeded');
   }
 }

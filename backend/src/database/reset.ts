@@ -22,16 +22,16 @@ class DatabaseReset {
    */
   private async dropAllTables(db: DatabaseAdapter): Promise<void> {
     console.log('🗑️  Dropping all tables...');
-    
+
     const tables = [
       'expense_splits',
-      'expenses', 
+      'expenses',
       'group_members',
       'groups',
       'members',
       'schema_migrations'
     ];
-    
+
     for (const table of tables) {
       try {
         await db.query(`DROP TABLE IF EXISTS ${table} CASCADE`);
@@ -47,17 +47,17 @@ class DatabaseReset {
    */
   async reset(): Promise<void> {
     console.log('🔄 Starting database reset...');
-    
+
     try {
       const factory = DatabaseFactory.getInstance();
       const db = factory.getDefaultAdapter();
       await db.connect();
-      
+
       // Drop all tables
       await this.dropAllTables(db);
-      
+
       console.log('✅ Database reset completed');
-      
+
     } catch (error) {
       console.error('❌ Database reset failed:', error instanceof Error ? error.message : 'Unknown error');
       process.exit(1);
@@ -73,19 +73,19 @@ class DatabaseReset {
    */
   async resetAndRebuild(): Promise<void> {
     console.log('🔄 Starting complete database reset and rebuild...');
-    
+
     try {
       // Reset database
       await this.reset();
-      
+
       // Run migrations
       await this.migrationRunner.migrate();
-      
+
       // Seed data
       await this.seeder.seed();
-      
+
       console.log('🎉 Database reset and rebuild completed successfully!');
-      
+
     } catch (error) {
       console.error('❌ Database reset and rebuild failed:', error instanceof Error ? error.message : 'Unknown error');
       process.exit(1);
@@ -96,7 +96,7 @@ class DatabaseReset {
 // Run reset if this file is executed directly
 if (require.main === module) {
   const reset = new DatabaseReset();
-  
+
   const args = process.argv.slice(2);
   if (args.includes('--rebuild')) {
     reset.resetAndRebuild()

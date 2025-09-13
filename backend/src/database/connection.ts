@@ -24,15 +24,15 @@ class DatabaseConnection {
       const dbConfig = getDbConfig();
       validateDbConfig(dbConfig);
       const { type, ...config } = dbConfig;
-      
+
       if (type === 'postgresql') {
         this.pool = new Pool(config);
-        
+
         // Test the connection
         const client = await this.pool.connect();
         await client.query('SELECT NOW()');
         client.release();
-        
+
         this.isConnected = true;
         console.log('✅ PostgreSQL database connected successfully');
       } else {
@@ -61,7 +61,7 @@ class DatabaseConnection {
     if (!this.isConnected || !this.pool) {
       throw new Error('Database not connected. Call connect() first.');
     }
-    
+
     const start = Date.now();
     try {
       const result = await this.pool.query(text, params);
@@ -122,7 +122,7 @@ class DatabaseConnection {
       if (!this.isConnected) {
         return { status: 'disconnected', message: 'Database not connected' };
       }
-      
+
       const result = await this.query('SELECT NOW() as current_time');
       return {
         status: 'connected',
