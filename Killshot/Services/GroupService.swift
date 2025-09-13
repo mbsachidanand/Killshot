@@ -57,7 +57,7 @@ class GroupService: ObservableObject, GroupServiceProtocol {
            !groups.isEmpty {
             return // Use cached data
         }
-        
+
         guard !isLoading else { return }
 
         isLoading = true

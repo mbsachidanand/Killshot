@@ -123,7 +123,7 @@ struct ContentView: View {
                     // Set up navigation immediately with success alert
                     selectedGroupForDetails = group
                     showSuccessAlert = true
-                    
+
                     // Only refresh groups if we don't already have fresh data
                     if groupService.groups.isEmpty {
                         groupService.refreshGroups()
@@ -146,7 +146,7 @@ struct ContentView: View {
                     // Set up navigation immediately with success alert
                     selectedGroupForDetails = group
                     showSuccessAlert = true
-                    
+
                     // Only refresh groups if we don't already have fresh data
                     if groupService.groups.isEmpty {
                         groupService.refreshGroups()
@@ -560,6 +560,7 @@ struct AddExpenseView: View {
     @State private var selectedGroup: Group?
     @State private var showingGroupPicker = false
     @State private var splitType = "Equally"
+    @FocusState private var isTitleFieldFocused: Bool
 
     // Validation states
     @State private var titleError = ""
@@ -705,7 +706,7 @@ struct AddExpenseView: View {
             VStack(spacing: 0) {
                 // Input fields section
                 VStack(spacing: 20) {
-                    inputField(label: "Title", text: $title, placeholder: "Enter expense title", error: titleError)
+                    inputField(label: "Title", text: $title, placeholder: "Enter expense title", error: titleError, isFocused: true)
 
                     amountField
 
@@ -738,6 +739,11 @@ struct AddExpenseView: View {
                 }
                 // Set the paid by field to current user
                 paidBy = "\(currentUser.name) (me)"
+                
+                // Focus the title field after a short delay to ensure the view is fully loaded
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    isTitleFieldFocused = true
+                }
             }
         }
         .background(Color.gray.opacity(0.05))
@@ -791,7 +797,7 @@ struct AddExpenseView: View {
     }
 
     // MARK: - Input Field
-    private func inputField(label: String, text: Binding<String>, placeholder: String, error: String = "") -> some View {
+    private func inputField(label: String, text: Binding<String>, placeholder: String, error: String = "", isFocused: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline)
@@ -808,6 +814,12 @@ struct AddExpenseView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(error.isEmpty ? Color.gray.opacity(0.3) : Color.red, lineWidth: 1)
                 )
+                .focused($isTitleFieldFocused)
+                .onAppear {
+                    if isFocused {
+                        isTitleFieldFocused = true
+                    }
+                }
 
             if !error.isEmpty {
                 Text(error)
