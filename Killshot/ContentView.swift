@@ -95,12 +95,11 @@ struct ContentView: View {
                 // It automatically triggers when selectedGroupForDetails is set to a non-nil value
                 .navigationDestination(item: $selectedGroupForDetails) { group in
                     // Create the GroupDetailView with the selected group
-                    GroupDetailView(group: group, showSuccessMessage: showSuccessAlert) {
+                    // Capture the showSuccessAlert value at the time of navigation
+                    let shouldShowSuccess = showSuccessAlert
+                    GroupDetailView(group: group, showSuccessMessage: shouldShowSuccess) {
                         // Callback to reset the success alert flag
                         showSuccessAlert = false
-                    }
-                    .onAppear {
-                        // Navigation destination triggered
                     }
                     .onDisappear {
                         // Clear the selected group when we navigate away
@@ -532,6 +531,7 @@ struct GroupDetailView: View {
         // Alert that shows when navigating here after adding an expense
         .alert("Expense Added!", isPresented: $showAlert) {
             Button("OK") {
+                print("🔄 Alert OK button tapped")
                 // Call the callback to reset the success alert flag
                 onAlertDismissed?()
             }
@@ -542,8 +542,8 @@ struct GroupDetailView: View {
             // Show alert if this view was navigated to after adding an expense
             if showSuccessMessage && !hasShownAlert {
                 hasShownAlert = true
-                // Use a longer delay to ensure the view is fully loaded and navigation is complete
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                // Small delay to ensure view is fully rendered
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     showAlert = true
                 }
             }
