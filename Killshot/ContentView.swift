@@ -101,8 +101,7 @@ struct ContentView: View {
                         showSuccessAlert = false
                     }
                     .onAppear {
-                        print("🔄 Navigation destination triggered for group: \(group.name)")
-                        print("🔄 showSuccessAlert value: \(showSuccessAlert)")
+                        // Navigation destination triggered
                     }
                     .onDisappear {
                         // Clear the selected group when we navigate away
@@ -533,10 +532,11 @@ struct GroupDetailView: View {
         }
         .onAppear {
             // Show alert if this view was navigated to after adding an expense
-            print("🔄 GroupDetailView onAppear - showSuccessMessage: \(showSuccessMessage)")
             if showSuccessMessage {
-                print("🔄 Showing success alert")
-                showAlert = true
+                // Add a small delay to ensure the view is fully loaded before showing alert
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    showAlert = true
+                }
             }
         }
     }
