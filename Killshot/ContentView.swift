@@ -83,9 +83,8 @@ struct ContentView: View {
                 // onChange watches for changes to groupService.groups
                 // When groups are updated (e.g., after adding an expense), this runs
                 .onChange(of: groupService.groups) { oldGroups, newGroups in
-                    // If we have a pending navigation, find the updated group and navigate
-                    // This ensures we navigate to the most up-to-date group data
-                    if let pendingGroup = selectedGroupForDetails {
+                    // Only update if we have a pending navigation and the group count changed
+                    if let pendingGroup = selectedGroupForDetails, oldGroups.count != newGroups.count {
                         if let updatedGroup = newGroups.first(where: { $0.id == pendingGroup.id }) {
                             selectedGroupForDetails = updatedGroup
                         }
@@ -124,12 +123,16 @@ struct ContentView: View {
                     // Set up navigation immediately with success alert
                     selectedGroupForDetails = group
                     showSuccessAlert = true
-
-                    // Refresh groups in background to get updated data
-                    groupService.refreshGroups()
+                    
+                    // Only refresh groups if we don't already have fresh data
+                    if groupService.groups.isEmpty {
+                        groupService.refreshGroups()
+                    }
                 } else {
-                    // Still refresh groups even if no navigation
-                    groupService.refreshGroups()
+                    // Only refresh groups if we don't already have data
+                    if groupService.groups.isEmpty {
+                        groupService.refreshGroups()
+                    }
                 }
             })
         }
@@ -143,12 +146,16 @@ struct ContentView: View {
                     // Set up navigation immediately with success alert
                     selectedGroupForDetails = group
                     showSuccessAlert = true
-
-                    // Refresh groups in background to get updated data
-                    groupService.refreshGroups()
+                    
+                    // Only refresh groups if we don't already have fresh data
+                    if groupService.groups.isEmpty {
+                        groupService.refreshGroups()
+                    }
                 } else {
-                    // Still refresh groups even if no navigation
-                    groupService.refreshGroups()
+                    // Only refresh groups if we don't already have data
+                    if groupService.groups.isEmpty {
+                        groupService.refreshGroups()
+                    }
                 }
             })
         }
@@ -254,11 +261,11 @@ struct ContentView: View {
                 // Show empty state when no groups exist
                 emptyStateView
             } else {
-                // Show the actual list of groups
-                // ForEach iterates through each group and creates a row for it
-                // enumerated() gives us both the index and the group
-                ForEach(Array(userGroups.enumerated()), id: \.element.id) { index, group in
-                    groupRow(for: group, at: index)
+                // Show the actual list of groups using LazyVStack for better performance
+                LazyVStack(spacing: 8) {
+                    ForEach(Array(userGroups.enumerated()), id: \.element.id) { index, group in
+                        groupRow(for: group, at: index)
+                    }
                 }
             }
         }
@@ -725,7 +732,10 @@ struct AddExpenseView: View {
                 addButton
             }
             .onAppear {
-                groupService.loadGroups()
+                // Only load groups if we don't have them already
+                if groupService.groups.isEmpty {
+                    groupService.loadGroups()
+                }
                 // Set the paid by field to current user
                 paidBy = "\(currentUser.name) (me)"
             }

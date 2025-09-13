@@ -36,10 +36,11 @@ class GroupService: ObservableObject, GroupServiceProtocol {
     @Published var groups: [Group] = []
     @Published var isLoading: Bool = false
     @Published var error: APIError? = nil
-    @Published var refreshTrigger: UUID = UUID()
 
     private let apiService: APIServiceProtocol
     private var cancellables = Set<AnyCancellable>()
+    private var lastFetchTime: Date?
+    private let cacheValidityDuration: TimeInterval = 30 // 30 seconds cache
 
     // Callback for UI refresh
     var onGroupsUpdated: (() -> Void)?
@@ -50,6 +51,13 @@ class GroupService: ObservableObject, GroupServiceProtocol {
 
     // MARK: - Public Methods
     func loadGroups() {
+        // Check if we have recent cached data
+        if let lastFetch = lastFetchTime,
+           Date().timeIntervalSince(lastFetch) < cacheValidityDuration,
+           !groups.isEmpty {
+            return // Use cached data
+        }
+        
         guard !isLoading else { return }
 
         isLoading = true
@@ -68,10 +76,7 @@ class GroupService: ObservableObject, GroupServiceProtocol {
                 receiveValue: { [weak self] groups in
                     // Update groups immediately on main thread
                     self?.groups = groups
-
-                    // Update refresh trigger to force UI update
-                    self?.refreshTrigger = UUID()
-
+                    self?.lastFetchTime = Date()
                     // Call the UI refresh callback
                     self?.onGroupsUpdated?()
                 }
