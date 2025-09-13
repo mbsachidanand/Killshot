@@ -96,8 +96,11 @@ struct ContentView: View {
                 // It automatically triggers when selectedGroupForDetails is set to a non-nil value
                 .navigationDestination(item: $selectedGroupForDetails) { group in
                     // Create the GroupDetailView with the selected group
+                    print("🔄 Navigation destination triggered for group: \(group.name)")
+                    print("🔄 showSuccessAlert value: \(showSuccessAlert)")
                     GroupDetailView(group: group, showSuccessMessage: showSuccessAlert) {
                         // Callback to reset the success alert flag
+                        print("🔄 Alert dismissed, resetting showSuccessAlert")
                         showSuccessAlert = false
                     }
                     .onDisappear {
@@ -118,21 +121,12 @@ struct ContentView: View {
             AddExpenseView(onExpenseAdded: { group in
                 // Navigate to group details page if group is provided
                 if let group = group {
-                    // First refresh groups to get the latest data, then navigate
+                    // Set up navigation immediately with success alert
+                    selectedGroupForDetails = group
+                    showSuccessAlert = true
+                    
+                    // Refresh groups in background to get updated data
                     groupService.refreshGroups()
-
-                    // Set up navigation after a short delay to ensure fresh data
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        // Find the updated group with fresh data
-                        if let updatedGroup = groupService.groups.first(where: { $0.id == group.id }) {
-                            selectedGroupForDetails = updatedGroup
-                            showSuccessAlert = true
-                        } else {
-                            // Fallback to original group if not found in updated list
-                            selectedGroupForDetails = group
-                            showSuccessAlert = true
-                        }
-                    }
                 } else {
                     // Still refresh groups even if no navigation
                     groupService.refreshGroups()
@@ -146,21 +140,12 @@ struct ContentView: View {
             AddExpenseView(onExpenseAdded: { group in
                 // Navigate to group details page if group is provided
                 if let group = group {
-                    // First refresh groups to get the latest data, then navigate
+                    // Set up navigation immediately with success alert
+                    selectedGroupForDetails = group
+                    showSuccessAlert = true
+                    
+                    // Refresh groups in background to get updated data
                     groupService.refreshGroups()
-
-                    // Set up navigation after a short delay to ensure fresh data
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        // Find the updated group with fresh data
-                        if let updatedGroup = groupService.groups.first(where: { $0.id == group.id }) {
-                            selectedGroupForDetails = updatedGroup
-                            showSuccessAlert = true
-                        } else {
-                            // Fallback to original group if not found in updated list
-                            selectedGroupForDetails = group
-                            showSuccessAlert = true
-                        }
-                    }
                 } else {
                     // Still refresh groups even if no navigation
                     groupService.refreshGroups()
@@ -538,7 +523,7 @@ struct GroupDetailView: View {
         // MARK: - Success Alert
         // Alert that shows when navigating here after adding an expense
         .alert("Expense Added!", isPresented: $showAlert) {
-            Button("OK") { 
+            Button("OK") {
                 // Call the callback to reset the success alert flag
                 onAlertDismissed?()
             }
@@ -547,7 +532,9 @@ struct GroupDetailView: View {
         }
         .onAppear {
             // Show alert if this view was navigated to after adding an expense
+            print("🔄 GroupDetailView onAppear - showSuccessMessage: \(showSuccessMessage)")
             if showSuccessMessage {
+                print("🔄 Showing success alert")
                 showAlert = true
             }
         }
